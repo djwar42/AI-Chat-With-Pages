@@ -44,10 +44,56 @@ jQuery(document).ready(function ($) {
     )
   }
 
+  var checkIndexingProgress = function () {
+    $.ajax({
+      url: aichwp_ajax.ajax_url,
+      type: 'POST',
+      data: {
+        action: 'aichwp_get_indexing_progress'
+      },
+      success: function (response) {
+        var progress = response.data
+        var completedCount = progress.processed
+        var totalCount = progress.total
+        var failedCount = progress.failed.length
+
+        if (completedCount < totalCount) {
+          $('#aichwp_indexing_status').text(
+            completedCount +
+              '/' +
+              totalCount +
+              ' documents indexed. ' +
+              failedCount +
+              ' failed.'
+          )
+          setTimeout(checkIndexingProgress, 2000)
+        } else {
+          if (failedCount > 0) {
+            $('#aichwp_indexing_status').text(
+              'Indexing completed with ' + failedCount + ' failures.'
+            )
+          } else {
+            $('#aichwp_indexing_status').text(
+              'All ' + completedCount + ' documents indexed successfully.'
+            )
+          }
+          $('#aichwp_manual_indexing_button')
+            .prop('disabled', false)
+            .text('Re-Index Site Content')
+        }
+      },
+      error: function () {
+        $('#aichwp_indexing_status').text(
+          'An error occurred while checking the indexing progress.'
+        )
+        $('#aichwp_manual_indexing_button').prop('disabled', false)
+      }
+    })
+  }
+
   $('#aichwp_manual_indexing_button').on('click', function () {
     var button = $(this)
     button.prop('disabled', true)
-    $('#aichwp_indexing_status').text('Indexing in progress...')
 
     $.ajax({
       url: aichwp_ajax.ajax_url,
@@ -56,10 +102,7 @@ jQuery(document).ready(function ($) {
         action: 'aichwp_manual_indexing'
       },
       success: function (response) {
-        var total_indexed = response.data.total_indexed
-        $('#aichwp_indexing_status').text(total_indexed + ' documents indexed.')
-        button.prop('disabled', false)
-        button.text('Re-Index Site Content')
+        checkIndexingProgress()
       },
       error: function () {
         $('#aichwp_indexing_status').text('An error occurred during indexing.')
@@ -67,4 +110,6 @@ jQuery(document).ready(function ($) {
       }
     })
   })
+
+  checkIndexingProgress()
 })

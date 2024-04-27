@@ -5,7 +5,6 @@ require_once AICHWP_PLUGIN_DIR .'/vendor/autoload.php';
 
 use Kambo\Langchain\Indexes\VectorstoreIndexCreator;
 
-
 /**
  * Go through all posts and create embeddings
 */
@@ -38,7 +37,6 @@ function aichwp_create_initial_embeddings() {
   ];
   update_option('aichwp_embeddings_progress', $progress);
   aichwp_release_semaphore_lock();
-  aichwp_update_embeddings_progress_notice_callback($progress);
 
   // Loop through each post and schedule an action to create embeddings
   foreach ($posts as $index => $post) {
@@ -129,7 +127,6 @@ function aichwp_create_post_embeddings_callback($post_id, $content_chunk, $chunk
 
       aichwp_release_semaphore_lock();
 
-      aichwp_update_embeddings_progress_notice_callback($progress);
   } catch (Exception $e) {
       // Log the error
       error_log("Error creating embeddings for post ID: $post_id, chunk: $chunk_index. Message: " . $e->getMessage());
@@ -237,7 +234,6 @@ function aichwp_schedule_initial_embeddings() {
   aichwp_create_initial_embeddings();
 }
 
-
 function aichwp_clear_embeddings_progress() {
   // Clear any existing scheduled actions for creating initial embeddings
   as_unschedule_all_actions('aichwp_create_initial_embeddings');
@@ -250,63 +246,22 @@ function aichwp_manual_indexing_callback() {
     aichwp_clear_embeddings_progress();
     aichwp_create_initial_embeddings();
 
-    $total_indexed = aichwp_get_total_indexed_documents();
-
-    wp_send_json_success(array(
-        'total_indexed' => $total_indexed,
-        'total_failed' => $total_failed
-    ));
+    wp_send_json_success();
 }
 add_action('wp_ajax_aichwp_manual_indexing', 'aichwp_manual_indexing_callback');
 
+add_action('wp_ajax_aichwp_get_indexing_progress', 'aichwp_get_indexing_progress_callback');
 
-// Update the progress notice
-function aichwp_update_embeddings_progress_notice_callback(array $progress) {
-  $completed_count = $progress['processed'];
-  $failed_count = count($progress['failed']);
+function aichwp_get_indexing_progress_callback() {
+    $progress = get_option('aichwp_embeddings_progress', [
+        'total'     => 0,
+        'processed' => 0,
+        'failed'    => [],
+        'post_ids'  => [],
+    ]);
 
-  if ($completed_count < $progress['total']) {
-      $message = sprintf(
-          'Processing post embeddings: %d/%d posts processed. %d failed.',
-          $completed_count,
-          $progress['total'],
-          $failed_count
-      );
-      update_option('aichwp_embeddings_progress_notice', $message);
-  } elseif ($completed_count === $progress['total']) {
-      sleep(1);
-
-      $final_completed_count = count(array_filter($progress['post_ids']));
-
-      if ($failed_count > 0) {
-          $message = sprintf(
-              'Embeddings creation completed with %d failures.',
-              $failed_count
-          );
-          set_transient('aichwp_embeddings_progress_notice_transient', $message, 60);
-          delete_option('aichwp_embeddings_progress');
-          delete_option('aichwp_embeddings_progress_notice');
-      } else {
-          $message = sprintf(
-              'All %d post embeddings have been created successfully.',
-              $final_completed_count
-          );
-          set_transient('aichwp_embeddings_progress_notice_transient', $message, 60);
-          delete_option('aichwp_embeddings_progress');
-          delete_option('aichwp_embeddings_progress_notice');
-      }
-  }
+    wp_send_json_success($progress);
 }
-
-// Display the progress notice in the admin area
-function aichwp_display_embeddings_progress_notice() {
-  $notice = get_transient('aichwp_embeddings_progress_notice_transient') ?: get_option('aichwp_embeddings_progress_notice');
-
-  if ($notice) {
-      echo '<div class="notice notice-info"><p>' . esc_html($notice) . '</p></div>';
-  }
-}
-add_action('admin_notices', 'aichwp_display_embeddings_progress_notice');
 
 /**
  * Create tables
@@ -352,11 +307,8 @@ function aichwp_create_initial_tables()
     }
 }
 
-
-
-
 /**
- * On post save, unpublish, or delete schedule an action to update the embeddings
+ * On post save, unpublish, or delete, schedule an action to update the embeddings
 */
 function aichwp_save_post($post_id, $post, $update) {
   global $wpdb;
@@ -416,6 +368,3 @@ function aichwp_delete_post_embeddings($post_id) {
   );
 }
 add_action('delete_post', 'aichwp_delete_post_embeddings');
-
-
-

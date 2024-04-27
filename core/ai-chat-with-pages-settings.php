@@ -102,7 +102,7 @@ function aichwp_register_settings() {
   }
 
   // Add settings section for manual indexing
-  add_settings_section('aichwp_manual_indexing', 'Manual Indexing', 'aichwp_manual_indexing_section_text', 'aichwp');
+  add_settings_section('aichwp_manual_indexing', 'Indexing', 'aichwp_manual_indexing_section_text', 'aichwp');
 
   // Add settings field for manual indexing button
   add_settings_field('aichwp_manual_indexing_button', '', 'aichwp_manual_indexing_button_field', 'aichwp', 'aichwp_manual_indexing');
@@ -199,10 +199,10 @@ function aichwp_section_text() {
 }
 
 /**
- * Manual indexing section text
+ * Indexing section text
 */
 function aichwp_manual_indexing_section_text() {
-  echo 'Manually index or re-index site content for AI Chat With Pages:';
+  echo 'Index your site content for AI Chat With Pages:';
 }
 
 /**
