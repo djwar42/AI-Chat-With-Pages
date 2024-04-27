@@ -32,7 +32,7 @@ function aichwp_render_settings_page() {
 
       foreach ((array) $wp_settings_sections['aichwp'] as $section) {
         if ($section['title']) {
-          echo "<h2 style='font-size: 22px; margin-top: 10px;'>{$section['title']}</h2>\n";
+          echo "<h2 style='font-size: 22px; margin-top: 30px;'>{$section['title']}</h2>\n";
         }
 
         if ($section['callback']) {

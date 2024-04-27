@@ -57,7 +57,14 @@ jQuery(document).ready(function ($) {
         var totalCount = progress.total
         var failedCount = progress.failed.length
 
-        if (completedCount < totalCount) {
+        if (completedCount === 0 && totalCount === 0) {
+          $('#aichwp_indexing_status').text(
+            'Your site content has not been indexed!'
+          )
+          $('#aichwp_manual_indexing_button')
+            .prop('disabled', false)
+            .text('Index Site Content')
+        } else if (completedCount < totalCount) {
           $('#aichwp_indexing_status').text(
             completedCount +
               '/' +
