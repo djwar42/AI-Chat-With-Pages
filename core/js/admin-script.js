@@ -54,10 +54,7 @@ jQuery(document).ready(function ($) {
       success: function (response) {
         var progress = response.data || null
 
-        console.log(progress)
-
         if (progress === null) {
-          // aichwp_embeddings_progress is deleted, indicating indexing is completed
           $('#aichwp_indexing_status').html(
             "<span style='color: green;'>Indexing completed!</span>"
           )

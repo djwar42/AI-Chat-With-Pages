@@ -53,7 +53,7 @@ function aichwp_render_settings_page() {
     submit_button();
     ?>
   </form>
-  <div id="aichwp-chat-app" style="position: absolute; left: 520px; top: 720px;"></div>
+  <div id="aichwp-chat-app" style="position: absolute; left: 520px; top: 870px;"></div>
 
   <?php
 }
@@ -69,9 +69,9 @@ function aichwp_register_settings() {
   $options_update_needed = false;
 
   register_setting(
-      'aichwp_settings',
-      'aichwp_settings',
-      'aichwp_validate_settings'
+    'aichwp_settings',
+    'aichwp_settings',
+    'aichwp_validate_settings'
   );
 
   add_settings_section('aichwp_main', 'Main Settings', 'aichwp_section_text', 'aichwp');
@@ -80,7 +80,7 @@ function aichwp_register_settings() {
   add_settings_field('aichwp_openai_key', 'OpenAI API Key', 'aichwp_openai_key_field', 'aichwp', 'aichwp_main');
 
   // Add settings field for messages per hour limit
-  add_settings_field('aichwp_messages_per_hour_limit', 'Messages Per Hour Limit', 'aichwp_messages_per_hour_limit_field', 'aichwp', 'aichwp_main');
+  add_settings_field('aichwp_messages_per_hour_limit', 'Max Messages Per Hour For Each User', 'aichwp_messages_per_hour_limit_field', 'aichwp', 'aichwp_main');
 
   // Add settings field for OpenAI chat model
   add_settings_field('aichwp_openai_chat_model', 'OpenAI Chat Model', 'aichwp_openai_chat_model_field', 'aichwp', 'aichwp_main');
@@ -213,8 +213,14 @@ function aichwp_manual_indexing_button_field() {
 
   $button_text = ($total_indexed > 0) ? 'Re-Index Site Content' : 'Index Site Content';
 
-  echo '<button type="button" id="aichwp_manual_indexing_button" class="button button-primary">' . $button_text . '</button>';
-  echo '<span id="aichwp_indexing_status" style="margin-left: 10px; color: green;">' . $total_indexed . ' documents indexed.</span>';
+  if($total_indexed > 0) {
+    echo '<span id="aichwp_indexing_status" style="color: green;">&nbsp;' . $total_indexed . ' documents indexed.<br/>&nbsp;Any new content site content will be automatically indexed.</span>';
+  }
+  else {
+    echo '<button type="button" id="aichwp_manual_indexing_button" class="button button-primary">' . $button_text . '</button>';
+    echo '<span id="aichwp_indexing_status" style="color: red;">&nbsp;You must index your documents!</span>';
+  }
+  
 }
 
 /**

@@ -21,6 +21,10 @@ function aichwp_create_initial_embeddings() {
       'posts_per_page' => -1,
   ]);
 
+  $posts = array_filter($posts, function ($post) {
+      return !empty(trim(preg_replace("/\n\s*\n/", "\n", strip_tags($post->post_content))));
+  });
+
   // Get the total number of posts
   $total_posts = count($posts);
   //error_log("Total: $total_posts");
