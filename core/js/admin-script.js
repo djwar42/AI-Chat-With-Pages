@@ -43,4 +43,31 @@ jQuery(document).ready(function ($) {
       aichwp_ajax.plugin_url + 'core/js/chat-app/build/static/js/aichwp.js'
     )
   }
+
+  $('#aichwp_manual_indexing_button').on('click', function () {
+    var button = $(this)
+    button.prop('disabled', true)
+    $('#aichwp_indexing_status').text('Indexing in progress...')
+
+    $.ajax({
+      url: aichwp_ajax.ajax_url,
+      type: 'POST',
+      data: {
+        action: 'aichwp_manual_indexing'
+      },
+      success: function (response) {
+        var total_indexed = response.data.total_indexed
+        var total_failed = response.data.total_failed
+        $('#aichwp_indexing_status').text(
+          total_indexed + ' documents indexed. ' + total_failed + ' failed.'
+        )
+        button.prop('disabled', false)
+        button.text('Re-Index Site Content')
+      },
+      error: function () {
+        $('#aichwp_indexing_status').text('An error occurred during indexing.')
+        button.prop('disabled', false)
+      }
+    })
+  })
 })

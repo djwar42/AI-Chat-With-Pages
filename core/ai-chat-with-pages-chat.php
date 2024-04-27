@@ -1,4 +1,5 @@
 <?php
+// ai-chat-with-pages-chat.php
 require_once AICHWP_PLUGIN_DIR .'/vendor/autoload.php';
 
 use Kambo\Langchain\VectorStores\SimpleStupidVectorStore\SimpleStupidVectorStore;

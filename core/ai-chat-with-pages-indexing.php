@@ -1,4 +1,5 @@
 <?php
+// ai-chat-with-pages-indexing.php
 require_once AICHWP_PLUGIN_DIR . '/vendor/action-scheduler/action-scheduler.php';
 require_once AICHWP_PLUGIN_DIR .'/vendor/autoload.php';
 
@@ -6,7 +7,7 @@ use Kambo\Langchain\Indexes\VectorstoreIndexCreator;
 
 
 /**
- * On initialisation, go through all posts and create embeddings
+ * Go through all posts and create embeddings
 */
 function aichwp_create_initial_embeddings() {
   global $wpdb;
@@ -246,6 +247,21 @@ function aichwp_clear_embeddings_data() {
   // Delete the progress option
   delete_option('aichwp_embeddings_progress');
 }
+
+function aichwp_manual_indexing_callback() {
+    aichwp_clear_embeddings_data();
+    aichwp_create_initial_embeddings();
+
+    $total_indexed = aichwp_get_total_indexed_documents();
+    $total_failed = aichwp_get_total_failed_documents();
+
+    wp_send_json_success(array(
+        'total_indexed' => $total_indexed,
+        'total_failed' => $total_failed
+    ));
+}
+add_action('wp_ajax_aichwp_manual_indexing', 'aichwp_manual_indexing_callback');
+
 
 // Update the progress notice
 function aichwp_update_embeddings_progress_notice_callback(array $progress) {

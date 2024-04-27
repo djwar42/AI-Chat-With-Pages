@@ -1,4 +1,5 @@
 <?php
+// ai-chat-with-pages-settings.php
 /**
  * Register settings page
 */
@@ -100,6 +101,12 @@ function aichwp_register_settings() {
     $options_update_needed = true;
   }
 
+  // Add settings section for manual indexing
+  add_settings_section('aichwp_manual_indexing', 'Manual Indexing', 'aichwp_manual_indexing_section_text', 'aichwp');
+
+  // Add settings field for manual indexing button
+  add_settings_field('aichwp_manual_indexing_button', '', 'aichwp_manual_indexing_button_field', 'aichwp', 'aichwp_manual_indexing');
+
   add_settings_section('aichwp_post_types', 'Post Types', 'aichwp_post_types_section_text', 'aichwp');
 
   $post_types = aichwp_get_post_types();
@@ -189,6 +196,50 @@ function aichwp_register_settings() {
 */
 function aichwp_section_text() {
   echo 'Configure the main AI Chat With Pages settings below:';
+}
+
+/**
+ * Manual indexing section text
+*/
+function aichwp_manual_indexing_section_text() {
+  echo 'Manually index or re-index site content for AI Chat With Pages:';
+}
+
+/**
+* Output manual indexing button field
+*/
+function aichwp_manual_indexing_button_field() {
+  $total_indexed = aichwp_get_total_indexed_documents();
+
+  $button_text = ($total_indexed > 0) ? 'Re-Index Site Content' : 'Index Site Content';
+
+  echo '<button type="button" id="aichwp_manual_indexing_button" class="button button-primary">' . $button_text . '</button>';
+  echo '<span id="aichwp_indexing_status" style="margin-left: 10px;">' . $total_indexed . ' documents indexed.</span>';
+}
+
+/**
+ * Get the total number of indexed documents
+ */
+function aichwp_get_total_indexed_documents() {
+  global $wpdb;
+  $table_name = $wpdb->prefix . 'aichat_post_embeddings';
+  $total_indexed = $wpdb->get_var("SELECT COUNT(*) FROM $table_name WHERE is_active = 1");
+  return intval($total_indexed);
+}
+
+add_action('wp_ajax_aichwp_manual_indexing', 'aichwp_manual_indexing_callback');
+
+function aichwp_manual_indexing_callback() {
+    aichwp_clear_embeddings_data();
+    aichwp_create_initial_embeddings();
+
+    $total_indexed = aichwp_get_total_indexed_documents();
+    $total_failed = aichwp_get_total_failed_documents();
+
+    wp_send_json_success(array(
+        'total_indexed' => $total_indexed,
+        'total_failed' => $total_failed
+    ));
 }
 
 /**
@@ -361,16 +412,26 @@ function aichwp_validate_settings($input) {
 
 $options = get_option('aichwp_settings', array());
 
-if (empty($options['openai_api_key'])) {
-    add_action('admin_notices', 'aichwp_openai_key_missing_notice');
-}
 
 function aichwp_openai_key_missing_notice() {
-    ?>
-    <div class="notice notice-error">
-        <p><?php _e('OpenAI API Key not set for AI Chat With Pages', 'ai-chat-with-pages'); ?></p>
-    </div>
-    <?php
+  ?>
+  <div class="notice notice-error">
+      <p><?php _e('OpenAI API Key not set for AI Chat With Pages. <a href="' . admin_url('options-general.php?page=aichwp') . '">Set the API key</a> to enable the chat functionality.', 'ai-chat-with-pages'); ?></p>
+  </div>
+  <?php
+}
+
+function aichwp_site_content_not_indexed_notice() {
+  ?>
+  <div class="notice notice-warning">
+      <p><?php _e('Site content not indexed for AI Chat With Pages. <a href="' . admin_url('options-general.php?page=aichwp') . '">Set the OpenAI API Key and index site content</a> to enable the chat functionality.', 'ai-chat-with-pages'); ?></p>
+  </div>
+  <?php
+}
+
+if (empty($options['openai_api_key'])) {
+  add_action('admin_notices', 'aichwp_openai_key_missing_notice');
+  add_action('admin_notices', 'aichwp_site_content_not_indexed_notice');
 }
 
 /**
