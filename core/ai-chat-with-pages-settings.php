@@ -422,8 +422,13 @@ function aichwp_site_content_not_indexed_notice() {
 
 if (empty($options['openai_api_key'])) {
   add_action('admin_notices', 'aichwp_openai_key_missing_notice');
+}
+
+if(aichwp_get_total_indexed_documents() == 0) {
   add_action('admin_notices', 'aichwp_site_content_not_indexed_notice');
 }
+
+
 
 /**
  * Enqueue scripts and styles for the plugin's admin page

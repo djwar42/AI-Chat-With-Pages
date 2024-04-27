@@ -49,4 +49,4 @@ require_once AICHWP_PLUGIN_DIR . 'core/ai-chat-with-pages-chat.php';
 register_activation_hook(AICHWP_PLUGIN_FILE, 'aichwp_create_initial_tables');
 
 // // Clear scheduled actions and progress option when the plugin is deactivated
-// register_deactivation_hook(AICHWP_PLUGIN_FILE, 'aichwp_clear_embeddings_data');
+register_deactivation_hook(AICHWP_PLUGIN_FILE, 'aichwp_clear_embeddings_progress');

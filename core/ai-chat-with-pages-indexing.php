@@ -238,7 +238,7 @@ function aichwp_schedule_initial_embeddings() {
 }
 
 
-function aichwp_clear_embeddings_data() {
+function aichwp_clear_embeddings_progress() {
   // Clear any existing scheduled actions for creating initial embeddings
   as_unschedule_all_actions('aichwp_create_initial_embeddings');
 
@@ -247,7 +247,7 @@ function aichwp_clear_embeddings_data() {
 }
 
 function aichwp_manual_indexing_callback() {
-    aichwp_clear_embeddings_data();
+    aichwp_clear_embeddings_progress();
     aichwp_create_initial_embeddings();
 
     $total_indexed = aichwp_get_total_indexed_documents();
