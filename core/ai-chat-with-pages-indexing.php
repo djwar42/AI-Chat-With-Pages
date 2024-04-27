@@ -4,11 +4,14 @@ require_once AICHWP_PLUGIN_DIR .'/vendor/autoload.php';
 
 use Kambo\Langchain\Indexes\VectorstoreIndexCreator;
 
+
 /**
  * On initialisation, go through all posts and create embeddings
 */
 function aichwp_create_initial_embeddings() {
   global $wpdb;
+
+  createTables();
   
   // Get all published posts
   $post_types = get_post_types(['public' => true], 'names');
@@ -292,7 +295,49 @@ function aichwp_display_embeddings_progress_notice() {
 }
 add_action('admin_notices', 'aichwp_display_embeddings_progress_notice');
 
+/**
+ * Create tables
+*/
+function createTables()
+{
+    global $wpdb;
 
+    $tables = [
+        'aichat_post_collection' => [
+            'id' => 'bigint(20) UNSIGNED AUTO_INCREMENT PRIMARY KEY',
+            'name' => 'varchar(255) NOT NULL',
+        ],
+        'aichat_post_embeddings' => [
+            'id' => 'bigint(20) UNSIGNED AUTO_INCREMENT PRIMARY KEY',
+            'uuid' => 'varchar(255)',
+            'collection_id' => 'bigint(20) UNSIGNED',
+            'post_id' => 'bigint(20) UNSIGNED',
+            'post_type' => 'varchar(255)',
+            'document' => 'text NOT NULL',
+            'metadata' => 'text NOT NULL',
+            'vector' => 'text NOT NULL',
+            'is_active' => 'tinyint(1) DEFAULT 1'
+        ],
+        'aichat_user_messages' => [
+            'id' => 'bigint(20) UNSIGNED AUTO_INCREMENT PRIMARY KEY',
+            'user_hash' => 'varchar(255) NOT NULL',
+            'messages' => 'int(11) NOT NULL DEFAULT 0',
+            'latest_hour' => 'int(11) NOT NULL'
+        ]
+    ];
+
+    foreach ($tables as $tableName => $columns) {
+        $columnDefinitions = [];
+        foreach ($columns as $columnName => $columnType) {
+            $columnDefinitions[] = "{$columnName} {$columnType}";
+        }
+
+        $columnDefinitionsSql = implode(', ', $columnDefinitions);
+        $tableName = $wpdb->prefix . $tableName;
+        $sql = "CREATE TABLE IF NOT EXISTS `{$tableName}` ({$columnDefinitionsSql})";
+        $wpdb->query($sql);
+    }
+}
 
 
 
