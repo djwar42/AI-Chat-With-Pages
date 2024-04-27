@@ -251,7 +251,6 @@ function aichwp_manual_indexing_callback() {
     aichwp_create_initial_embeddings();
 
     $total_indexed = aichwp_get_total_indexed_documents();
-    $total_failed = aichwp_get_total_failed_documents();
 
     wp_send_json_success(array(
         'total_indexed' => $total_indexed,
