@@ -352,7 +352,8 @@ function aichwp_validate_settings($input) {
   $output = array();
 
   // Validate OpenAI api key
-  $output['openai_api_key'] = sanitize_text_field($input['openai_api_key']);
+  if(isset($input['openai_api_key']))
+    $output['openai_api_key'] = sanitize_text_field($input['openai_api_key']);
 
   // Validate messages per hour limit
   $input['messages_per_hour_limit'] = intval($input['messages_per_hour_limit']);
@@ -393,9 +394,12 @@ function aichwp_validate_settings($input) {
   $output['aichwpChatOpenButtonColor'] = sanitize_text_field($input['aichwpChatOpenButtonColor']);
 
   $output['chat_welcome_message'] = sanitize_textarea_field($input['chat_welcome_message']);
-  $output['initial_suggested_question_1'] = sanitize_textarea_field($input['initial_suggested_question_1']);
-  $output['initial_suggested_question_2'] = sanitize_textarea_field($input['initial_suggested_question_2']);
-  $output['initial_suggested_question_3'] = sanitize_textarea_field($input['initial_suggested_question_3']);
+  if(isset($input['initial_suggested_question_1']))
+    $output['initial_suggested_question_1'] = sanitize_textarea_field($input['initial_suggested_question_1']);
+  if(isset($input['initial_suggested_question_2']))
+    $output['initial_suggested_question_2'] = sanitize_textarea_field($input['initial_suggested_question_2']);
+  if(isset($input['initial_suggested_question_3']))
+    $output['initial_suggested_question_3'] = sanitize_textarea_field($input['initial_suggested_question_3']);
 
   return $output;
 }
