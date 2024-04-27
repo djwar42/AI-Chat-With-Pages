@@ -53,7 +53,7 @@ function aichwp_render_settings_page() {
     submit_button();
     ?>
   </form>
-  <div id="aichwp-chat-app" style="position: absolute; left: 520px; top: 870px;"></div>
+  <div id="aichwp-chat-app" style="position: absolute; left: 520px; top: 900px;"></div>
 
   <?php
 }
@@ -209,14 +209,21 @@ function aichwp_manual_indexing_section_text() {
 * Output manual indexing button field
 */
 function aichwp_manual_indexing_button_field() {
+  $options = get_option('aichwp_settings', array());
 
   $indexed_posts_ids = array_column(aichwp_get_indexed_documents_ids(), 'post_id');
   $all_posts_ids = aichwp_get_published_posts_ids();
 
   $missing_posts_ids = array_diff($all_posts_ids, $indexed_posts_ids);
-  $extra_posts_ids = array_diff($indexed_posts_ids, $all_posts_ids);
+  // $extra_posts_ids = array_diff($indexed_posts_ids, $all_posts_ids);
 
-  if(empty($missing_posts_ids) && empty($extra_posts_ids)) {
+  // error_log('Missing posts: ' . print_r($missing_posts_ids, true));
+  // error_log('Extra posts: ' . print_r($extra_posts_ids, true));
+
+  if(!isset($options['openai_api_key']) || empty($options['openai_api_key'])) {
+    echo '<span id="aichwp_indexing_status" style="color: red;">&nbsp;Please set your OpenAI API Key above before commencing indexing.</span>';
+  }
+  else if(empty($missing_posts_ids)) {
     echo '<span id="aichwp_indexing_status" style="color: green;">&nbsp;' . count($indexed_posts_ids) . ' documents indexed.<br/>&nbsp;Any new content site content will be automatically indexed.</span>';
   }
   else {
@@ -232,14 +239,14 @@ function aichwp_manual_indexing_button_field() {
 function aichwp_get_total_indexed_documents() {
   global $wpdb;
   $table_name = $wpdb->prefix . 'aichat_post_embeddings';
-  $total_indexed = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM $table_name WHERE is_active = 1");
+  $total_indexed = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM $table_name"); // WHERE is_active = 1
   return intval($total_indexed);
 }
 
 function aichwp_get_indexed_documents_ids() {
   global $wpdb;
   $table_name = $wpdb->prefix . 'aichat_post_embeddings';
-  $total_indexed = $wpdb->get_results("SELECT DISTINCT post_id FROM $table_name WHERE is_active = 1");
+  $total_indexed = $wpdb->get_results("SELECT DISTINCT post_id FROM $table_name"); // WHERE is_active = 1
   return $total_indexed;
 }
 

@@ -75,7 +75,8 @@ jQuery(document).ready(function ($) {
             .text('Index Site Content')
         } else if (completedCount < totalCount) {
           $('#aichwp_indexing_status').html(
-            "<span style='color: green;'>&nbsp" +
+            "<span style='color: green;'>&nbsp;" +
+              "<img src='/wp-content/plugins/ai-chat-with-pages/core/images/loading.gif' style='width: 20px; height: 20px;' />&nbsp;" +
               completedCount +
               '/' +
               totalCount +
