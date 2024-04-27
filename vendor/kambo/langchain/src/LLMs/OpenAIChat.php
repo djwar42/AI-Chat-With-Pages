@@ -30,11 +30,8 @@ final class OpenAIChat extends BaseLLM
     ) {
         parent::__construct($config, $callbackManager);
 
-        $wpaichw_settings = get_option('wpaichw_settings');
-        $this->openaiApiKey = $wpaichw_settings['openai_api_key'] ?? null;
-
-        error_log(print_r($wpaichw_settings, true));
-        error_log('$this->openaiApiKey ' . $this->openaiApiKey);
+        $aichwp_settings = get_option('aichwp_settings');
+        $this->openaiApiKey = $aichwp_settings['openai_api_key'] ?? null;
 
         if ($client === null) {
             $client = \OpenAI::client($this->openaiApiKey);
@@ -117,7 +114,7 @@ final class OpenAIChat extends BaseLLM
         );
 
         // Get the OpenAI chat model from WordPress options or default to 'gpt-3.5-turbo'
-        $this->modelName = get_option('wpaichw_settings')['openai_chat_model'] ?? 'gpt-3.5-turbo';
+        $this->modelName = get_option('aichwp_settings')['openai_chat_model'] ?? 'gpt-3.5-turbo';
 
         $params = array_merge(['model' => $this->modelName], $this->defaultParams());
 

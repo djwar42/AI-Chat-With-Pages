@@ -49,8 +49,8 @@ class OpenAIEmbeddings implements Embeddings
         array $config = [],
         ?Client $client = null
     ) {
-        $wpaichw_settings = get_option('wpaichw_settings');
-        $this->openaiApiKey = $wpaichw_settings['openai_api_key'] ?? null;
+        $aichwp_settings = get_option('aichwp_settings');
+        $this->openaiApiKey = $aichwp_settings['openai_api_key'] ?? null;
 
         if ($this->openaiApiKey === null) {
             throw new MissingAPIKey('You have to provide an APIKEY.');
