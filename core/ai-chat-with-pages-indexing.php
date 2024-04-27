@@ -12,8 +12,6 @@ use Kambo\Langchain\Indexes\VectorstoreIndexCreator;
 function aichwp_create_initial_embeddings() {
   global $wpdb;
 
-  createTables();
-  
   // Get all published posts
   $post_types = get_post_types(['public' => true], 'names');
   $post_types[] = 'wp_template';
@@ -314,7 +312,7 @@ add_action('admin_notices', 'aichwp_display_embeddings_progress_notice');
 /**
  * Create tables
 */
-function createTables()
+function aichwp_create_initial_tables()
 {
     global $wpdb;
 

@@ -65,8 +65,6 @@ add_action('admin_init', 'aichwp_register_settings');
 
 function aichwp_register_settings() {
 
-  error_log('aichwp_register_settings');
-
   $options = get_option('aichwp_settings', array());
   $options_update_needed = false;
 
@@ -348,7 +346,6 @@ function aichwp_initial_suggested_question_field($args) {
  * Validate input
  */
 function aichwp_validate_settings($input) {
-  error_log('aichwp_validate_settings');
   $output = array();
 
   // Validate OpenAI api key

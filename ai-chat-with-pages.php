@@ -45,8 +45,8 @@ require_once AICHWP_PLUGIN_DIR . 'core/ai-chat-with-pages-indexing.php';
 require_once AICHWP_PLUGIN_DIR . 'core/ai-chat-with-pages-chat.php';
 
 
-// // Schedule the creation of initial embeddings when the plugin is activated
-// register_activation_hook(AICHWP_PLUGIN_FILE, 'aichwp_schedule_initial_embeddings');
+// Schedule the creation of initial tables when the plugin is activated
+register_activation_hook(AICHWP_PLUGIN_FILE, 'aichwp_create_initial_tables');
 
 // // Clear scheduled actions and progress option when the plugin is deactivated
 // register_deactivation_hook(AICHWP_PLUGIN_FILE, 'aichwp_clear_embeddings_data');
