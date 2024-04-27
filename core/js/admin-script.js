@@ -56,11 +56,9 @@ jQuery(document).ready(function ($) {
 
         if (progress === null) {
           $('#aichwp_indexing_status').html(
-            "<span style='color: green;'>Indexing completed!</span>"
+            "<span style='color: green;'>&nbsp;Indexing completed!</span>"
           )
-          $('#aichwp_manual_indexing_button')
-            .prop('disabled', false)
-            .text('Re-Index Site Content')
+          $('#aichwp_manual_indexing_button').hide()
           return
         }
 
@@ -70,43 +68,40 @@ jQuery(document).ready(function ($) {
 
         if (completedCount === 0 && totalCount === 0) {
           $('#aichwp_indexing_status').html(
-            "<span style='color: red;'>Your site content has not been indexed!</span>"
+            "<span style='color: red;'>&nbsp;Your site content has not been indexed!</span>"
           )
           $('#aichwp_manual_indexing_button')
             .prop('disabled', false)
             .text('Index Site Content')
         } else if (completedCount < totalCount) {
-          $('#aichwp_indexing_status').text(
-            completedCount +
+          $('#aichwp_indexing_status').html(
+            "<span style='color: green;'>&nbsp" +
+              completedCount +
               '/' +
               totalCount +
               ' documents indexed. ' +
               failedCount +
-              ' failed.'
+              ' failed.</span>'
           )
           setTimeout(checkIndexingProgress, 2000)
         } else {
           if (failedCount > 0) {
             $('#aichwp_indexing_status').html(
-              "<span style='color: green;'>Indexing completed with " +
+              "<span style='color: green;'>&nbsp;Indexing completed with " +
                 failedCount +
                 ' failures.</span>'
             )
           } else {
             $('#aichwp_indexing_status').html(
-              "<span style='color: green;'>All " +
-                completedCount +
-                ' documents indexed successfully.</span>'
+              "<span style='color: green;'>&nbsp;Indexing completed!</span>"
             )
           }
-          $('#aichwp_manual_indexing_button')
-            .prop('disabled', false)
-            .text('Re-Index Site Content')
+          $('#aichwp_manual_indexing_button').hide()
         }
       },
       error: function () {
         $('#aichwp_indexing_status').html(
-          'An error occurred while checking the indexing progress.'
+          '&nbsp;An error occurred while checking the indexing progress.'
         )
         $('#aichwp_manual_indexing_button').prop('disabled', false)
       }
@@ -127,7 +122,9 @@ jQuery(document).ready(function ($) {
         checkIndexingProgress()
       },
       error: function () {
-        $('#aichwp_indexing_status').text('An error occurred during indexing.')
+        $('#aichwp_indexing_status').html(
+          '&nbsp;An error occurred during indexing.'
+        )
         button.prop('disabled', false)
       }
     })

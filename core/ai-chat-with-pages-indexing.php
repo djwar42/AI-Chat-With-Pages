@@ -11,23 +11,10 @@ use Kambo\Langchain\Indexes\VectorstoreIndexCreator;
 function aichwp_create_initial_embeddings() {
   global $wpdb;
 
-  // Get all published posts
-  $post_types = get_post_types(['public' => true], 'names');
-  $post_types[] = 'wp_template';
-  unset($post_types['attachment']);
-  $posts = get_posts([
-      'post_type' => $post_types,
-      'post_status' => 'publish',
-      'posts_per_page' => -1,
-  ]);
-
-  $posts = array_filter($posts, function ($post) {
-      return !empty(trim(preg_replace("/\n\s*\n/", "\n", strip_tags($post->post_content))));
-  });
+  $posts = awchwp_get_published_posts();
 
   // Get the total number of posts
   $total_posts = count($posts);
-  //error_log("Total: $total_posts");
 
   // Create an array of post IDs and mark them as not completed
   $post_ids = array_fill_keys(wp_list_pluck($posts, 'ID'), false);
@@ -72,6 +59,24 @@ function aichwp_create_initial_embeddings() {
 }
 
 add_action('aichwp_create_post_embeddings', 'aichwp_create_post_embeddings_callback', 10, 4);
+
+function awchwp_get_published_posts() {
+  // Get all published posts
+  $post_types = get_post_types(['public' => true], 'names');
+  $post_types[] = 'wp_template';
+  unset($post_types['attachment']);
+  $posts = get_posts([
+      'post_type' => $post_types,
+      'post_status' => 'publish',
+      'posts_per_page' => -1,
+  ]);
+
+  $posts = array_filter($posts, function ($post) {
+      return !empty(trim(preg_replace("/\n\s*\n/", "\n", strip_tags($post->post_content))));
+  });
+
+  return $posts;
+}
 
 function aichwp_create_post_embeddings_callback($post_id, $content_chunk, $chunk_index, $total_chunks) {
   // Retrieve the post

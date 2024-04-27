@@ -209,15 +209,18 @@ function aichwp_manual_indexing_section_text() {
 * Output manual indexing button field
 */
 function aichwp_manual_indexing_button_field() {
-  $total_indexed = aichwp_get_total_indexed_documents();
 
-  $button_text = ($total_indexed > 0) ? 'Re-Index Site Content' : 'Index Site Content';
+  $indexed_posts_ids = array_column(aichwp_get_indexed_documents_ids(), 'post_id');
+  $all_posts_ids = aichwp_get_published_posts_ids();
 
-  if($total_indexed > 0) {
-    echo '<span id="aichwp_indexing_status" style="color: green;">&nbsp;' . $total_indexed . ' documents indexed.<br/>&nbsp;Any new content site content will be automatically indexed.</span>';
+  $missing_posts_ids = array_diff($all_posts_ids, $indexed_posts_ids);
+  $extra_posts_ids = array_diff($indexed_posts_ids, $all_posts_ids);
+
+  if(empty($missing_posts_ids) && empty($extra_posts_ids)) {
+    echo '<span id="aichwp_indexing_status" style="color: green;">&nbsp;' . count($indexed_posts_ids) . ' documents indexed.<br/>&nbsp;Any new content site content will be automatically indexed.</span>';
   }
   else {
-    echo '<button type="button" id="aichwp_manual_indexing_button" class="button button-primary">' . $button_text . '</button>';
+    echo '<button type="button" id="aichwp_manual_indexing_button" class="button button-primary">Index Site Content</button>';
     echo '<span id="aichwp_indexing_status" style="color: red;">&nbsp;You must index your documents!</span>';
   }
   
@@ -229,10 +232,39 @@ function aichwp_manual_indexing_button_field() {
 function aichwp_get_total_indexed_documents() {
   global $wpdb;
   $table_name = $wpdb->prefix . 'aichat_post_embeddings';
-  $total_indexed = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM $table_name"); // WHERE is_active = 1
+  $total_indexed = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM $table_name WHERE is_active = 1");
   return intval($total_indexed);
 }
 
+function aichwp_get_indexed_documents_ids() {
+  global $wpdb;
+  $table_name = $wpdb->prefix . 'aichat_post_embeddings';
+  $total_indexed = $wpdb->get_results("SELECT DISTINCT post_id FROM $table_name WHERE is_active = 1");
+  return $total_indexed;
+}
+
+function aichwp_get_published_posts_ids() {
+  // Get all published posts
+  $post_types = get_post_types(['public' => true], 'names');
+  $post_types[] = 'wp_template';
+  unset($post_types['attachment']);
+
+  $posts = get_posts([
+      'post_type' => $post_types,
+      'post_status' => 'publish',
+      'posts_per_page' => -1,
+  ]);
+
+  $filtered_ids = array_map(function ($post) {
+      $content = trim(preg_replace("/\n\s*\n/", "\n", strip_tags($post->post_content)));
+      if (!empty($content)) {
+          return $post->ID;
+      }
+      return null;
+  }, $posts);
+
+  return array_filter($filtered_ids);
+}
 
 
 /**
