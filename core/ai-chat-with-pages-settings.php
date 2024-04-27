@@ -212,13 +212,36 @@ function aichwp_manual_indexing_button_field() {
   $options = get_option('aichwp_settings', array());
 
   $indexed_posts_ids = array_column(aichwp_get_indexed_documents_ids(), 'post_id');
-  $all_posts_ids = aichwp_get_published_posts_ids();
+  $all_posts_ids = aichwp_get_posts_ids();
 
   $missing_posts_ids = array_diff($all_posts_ids, $indexed_posts_ids);
-  // $extra_posts_ids = array_diff($indexed_posts_ids, $all_posts_ids);
+  $extra_posts_ids = array_diff($indexed_posts_ids, $all_posts_ids);
 
-  // error_log('Missing posts: ' . print_r($missing_posts_ids, true));
-  // error_log('Extra posts: ' . print_r($extra_posts_ids, true));
+  error_log('Missing posts: ' . print_r($missing_posts_ids, true));
+  error_log('Extra posts: ' . print_r($extra_posts_ids, true));
+
+  // Remove extra post IDs from the aichat_post_embeddings table
+  global $wpdb;
+  foreach ($extra_posts_ids as $post_id) {
+      $wpdb->delete(
+          "{$wpdb->prefix}aichat_post_embeddings",
+          ['post_id' => $post_id]
+      );
+  }
+
+  // Check if missing posts are in progress of being embedded
+  $scheduled_posts_ids = [];
+  foreach ($missing_posts_ids as $key => $post_id) {
+      $embedding_in_progress = get_post_meta($post_id, 'embedding_in_progress', true);
+
+      if ($embedding_in_progress === '1') {
+          error_log("Post $post_id is in progress of being embedded.");
+          $scheduled_posts_ids[] = $post_id;
+          unset($missing_posts_ids[$key]);
+      } else {
+          error_log("Post $post_id is not currently being embedded.");
+      }
+  }
 
   if(!isset($options['openai_api_key']) || empty($options['openai_api_key'])) {
     echo '<span id="aichwp_indexing_status" style="color: red;">&nbsp;Please set your OpenAI API Key above before commencing indexing.</span>';
@@ -250,7 +273,7 @@ function aichwp_get_indexed_documents_ids() {
   return $total_indexed;
 }
 
-function aichwp_get_published_posts_ids() {
+function aichwp_get_posts_ids() {
   // Get all published posts
   $post_types = get_post_types(['public' => true], 'names');
   $post_types[] = 'wp_template';
@@ -258,7 +281,7 @@ function aichwp_get_published_posts_ids() {
 
   $posts = get_posts([
       'post_type' => $post_types,
-      'post_status' => 'publish',
+      'post_status' => 'publish, draft, trash',
       'posts_per_page' => -1,
   ]);
 

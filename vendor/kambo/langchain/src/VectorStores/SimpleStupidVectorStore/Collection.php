@@ -56,6 +56,18 @@ class Collection
                 $post_type = '';
             }
 
+            if(isset($row[0]['post_status'])) {
+                if($post_status = $row[0]['post_status'] == 'publish') {
+                    $post_status = 1;
+                }
+                else {
+                    $post_status = 0;
+                }
+            }
+            else {
+                $post_status = 0;
+            }
+
             // Insert the metadata, document information, and serialized vector into the 'embeddings' table
             $wpdb->insert("{$wpdb->prefix}aichat_post_embeddings", [
                 'uuid' => $row[2],
@@ -64,7 +76,8 @@ class Collection
                 'post_id' => $post_id,
                 'document' => $row[1],
                 'metadata' => json_encode($row[0]),
-                'vector' => $serializedVector  // Store the serialized vector
+                'vector' => $serializedVector,
+                'is_active' => $post_status
             ]);
             $embeddingsId = $wpdb->insert_id;
             $embeddingsIds[] = $embeddingsId;

@@ -11,7 +11,7 @@ use Kambo\Langchain\Indexes\VectorstoreIndexCreator;
 function aichwp_create_initial_embeddings() {
   global $wpdb;
 
-  $posts = awchwp_get_published_posts();
+  $posts = awchwp_get_posts();
 
   // Get the total number of posts
   $total_posts = count($posts);
@@ -60,14 +60,14 @@ function aichwp_create_initial_embeddings() {
 
 add_action('aichwp_create_post_embeddings', 'aichwp_create_post_embeddings_callback', 10, 4);
 
-function awchwp_get_published_posts() {
-  // Get all published posts
+function awchwp_get_posts() {
+  // Get all published, draft posts
   $post_types = get_post_types(['public' => true], 'names');
   $post_types[] = 'wp_template';
   unset($post_types['attachment']);
   $posts = get_posts([
       'post_type' => $post_types,
-      'post_status' => 'publish',
+      'post_status' => 'publish, draft, trash',
       'posts_per_page' => -1,
   ]);
 
@@ -88,6 +88,9 @@ function aichwp_create_post_embeddings_callback($post_id, $content_chunk, $chunk
   $retry_count = (int) $retry_count;
 
   try {
+      // Set the 'embedding_in_progress' post meta field to 1
+      update_post_meta($post_id, 'embedding_in_progress', 1);
+
       // Create an instance of VectorstoreIndexCreator
       $indexCreator = new VectorstoreIndexCreator();
 
@@ -95,6 +98,7 @@ function aichwp_create_post_embeddings_callback($post_id, $content_chunk, $chunk
       $index = $indexCreator->fromPost(
           $post_id,
           $post->post_type,
+          $post->post_status,
           $post->guid,
           $post->post_title,
           $content_chunk,
@@ -105,34 +109,32 @@ function aichwp_create_post_embeddings_callback($post_id, $content_chunk, $chunk
           throw new Exception("Failed to create embeddings for post ID: $post_id, chunk: $chunk_index");
       }
 
-      //error_log("Embeddings created successfully for post ID: $post_id, chunk: $chunk_index");
-
       // Remove the retry count meta if the embeddings creation is successful
       delete_post_meta($post_id, $retry_key);
 
       // Acquire the semaphore lock
       while (!aichwp_acquire_semaphore_lock()) {
           sleep(1);
-          //error_log('waiting for semaphore lock');
       }
 
       // Mark the post ID as completed
       $progress = get_option('aichwp_embeddings_progress', [
-          'total'     => 0,
+          'total' => 0,
           'processed' => 0,
-          'failed'    => [],
-          'post_ids'  => [],
+          'failed' => [],
+          'post_ids' => [],
       ]);
 
       // Check if all chunks for the post are completed
       if (aichwp_are_all_chunks_completed($post_id, $total_chunks)) {
           $progress['post_ids'][$post_id] = true;
-          $progress['processed']++; 
+          $progress['processed']++;
+
+          // Remove the 'embedding_in_progress' post meta field
+          delete_post_meta($post_id, 'embedding_in_progress');
       }
 
       update_option('aichwp_embeddings_progress', $progress);
-
-      //error_log("Count:" . count(array_filter($progress['post_ids'])));
 
       // Check if all posts are completed
       if ($progress['processed'] === $progress['total']) {
@@ -140,7 +142,6 @@ function aichwp_create_post_embeddings_callback($post_id, $content_chunk, $chunk
       }
 
       aichwp_release_semaphore_lock();
-
   } catch (Exception $e) {
       // Log the error
       error_log("Error creating embeddings for post ID: $post_id, chunk: $chunk_index. Message: " . $e->getMessage());
@@ -161,13 +162,16 @@ function aichwp_create_post_embeddings_callback($post_id, $content_chunk, $chunk
       } else {
           // If the retry count exceeds 5, add the post ID to the failed array
           $progress = get_option('aichwp_embeddings_progress', [
-              'total'     => 0,
+              'total' => 0,
               'processed' => 0,
-              'failed'    => [],
-              'post_ids'  => [],
+              'failed' => [],
+              'post_ids' => [],
           ]);
           $progress['failed'][] = $post_id;
           update_option('aichwp_embeddings_progress', $progress);
+
+          // Remove the 'embedding_in_progress' post meta field
+          delete_post_meta($post_id, 'embedding_in_progress');
       }
   } catch (Throwable $e) {
       // Log any unexpected errors
@@ -177,13 +181,16 @@ function aichwp_create_post_embeddings_callback($post_id, $content_chunk, $chunk
 
       // Add the post ID to the failed array
       $progress = get_option('aichwp_embeddings_progress', [
-          'total'     => 0,
+          'total' => 0,
           'processed' => 0,
-          'failed'    => [],
-          'post_ids'  => [],
+          'failed' => [],
+          'post_ids' => [],
       ]);
       $progress['failed'][] = $post_id;
       update_option('aichwp_embeddings_progress', $progress);
+
+      // Remove the 'embedding_in_progress' post meta field
+      delete_post_meta($post_id, 'embedding_in_progress');
   }
 }
 
@@ -349,7 +356,7 @@ function aichwp_save_post($post_id, $post, $update) {
       
       // Schedule the fromPost() call for each content chunk
       foreach ($content_chunks as $index => $chunk) {
-          as_enqueue_async_action('aichwp_update_post_embeddings', [$post_id, $post->post_type, $post->guid, $post->post_title, $chunk, $index]);
+          as_enqueue_async_action('aichwp_update_post_embeddings', [$post_id, $post->post_type, $post->post_status, $post->guid, $post->post_title, $chunk, $index]);
       }
   } else {
       // Set is_active to 0 for unpublished or trashed posts
@@ -363,15 +370,15 @@ function aichwp_save_post($post_id, $post, $update) {
 }
 add_action('save_post', 'aichwp_save_post', 10, 3);
 
-function aichwp_update_post_embeddings($post_id, $post_type, $post_guid, $post_title, $content_chunk, $chunk_index) {
+function aichwp_update_post_embeddings($post_id, $post_type, $post_status, $post_guid, $post_title, $content_chunk, $chunk_index) {
   try {
-      $index = (new VectorstoreIndexCreator())->fromPost($post_id, $post_type, $post_guid, $post_title, $content_chunk, ['collection_name' => 'posts']);
+      $index = (new VectorstoreIndexCreator())->fromPost($post_id, $post_type, $post_status, $post_guid, $post_title, $content_chunk, ['collection_name' => 'posts']);
       error_log("Updated chunk $chunk_index for post $post_id, $post_title");
   } catch (Exception $e) {
       error_log("Error updating embeddings for post $post_id, chunk $chunk_index: " . $e->getMessage());
   }
 }
-add_action('aichwp_update_post_embeddings', 'aichwp_update_post_embeddings', 10, 6);
+add_action('aichwp_update_post_embeddings', 'aichwp_update_post_embeddings', 10, 7);
 
 function aichwp_delete_post_embeddings($post_id) {
   global $wpdb;

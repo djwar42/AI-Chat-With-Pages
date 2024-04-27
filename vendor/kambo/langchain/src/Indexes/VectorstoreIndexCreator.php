@@ -90,13 +90,13 @@ class VectorstoreIndexCreator
      *
      * @return VectorStoreIndexWrapper
      */
-    public function fromPost(int $post_id, string $post_type, string $post_guid, string $post_title, string $post_content, array $additionalParams = []): VectorStoreIndexWrapper
+    public function fromPost(int $post_id, string $post_type, string $post_status, string $post_guid, string $post_title, string $post_content, array $additionalParams = []): VectorStoreIndexWrapper
     {
         $docs = [];
 
         $post_content = strip_tags($post_content);
         
-        $docs[] = new Document(pageContent:$post_content, metadata: ['post_title' => $post_title, 'post_type' => $post_type, 'post_guid' => $post_guid, 'post_id' => $post_id]);
+        $docs[] = new Document(pageContent:$post_content, metadata: ['post_title' => $post_title, 'post_type' => $post_type, 'post_status' => $post_status, 'post_guid' => $post_guid, 'post_id' => $post_id]);
 
         $subDocs = $this->textSplitter->splitDocuments($docs);
         
