@@ -53,13 +53,19 @@ jQuery(document).ready(function ($) {
       },
       success: function (response) {
         var progress = response.data
+
+        if (progress === null) {
+          // aichwp_embeddings_progress doesn't exist, leave the status as is
+          return
+        }
+
         var completedCount = progress.processed
         var totalCount = progress.total
         var failedCount = progress.failed.length
 
         if (completedCount === 0 && totalCount === 0) {
-          $('#aichwp_indexing_status').text(
-            'Your site content has not been indexed!'
+          $('#aichwp_indexing_status').html(
+            "<span style='color: red;'>Your site content has not been indexed!</span>"
           )
           $('#aichwp_manual_indexing_button')
             .prop('disabled', false)
@@ -76,12 +82,16 @@ jQuery(document).ready(function ($) {
           setTimeout(checkIndexingProgress, 2000)
         } else {
           if (failedCount > 0) {
-            $('#aichwp_indexing_status').text(
-              'Indexing completed with ' + failedCount + ' failures.'
+            $('#aichwp_indexing_status').html(
+              "<span style='color: green;'>Indexing completed with " +
+                failedCount +
+                ' failures.</span>'
             )
           } else {
-            $('#aichwp_indexing_status').text(
-              'All ' + completedCount + ' documents indexed successfully.'
+            $('#aichwp_indexing_status').html(
+              "<span style='color: green;'>All " +
+                completedCount +
+                ' documents indexed successfully.</span>'
             )
           }
           $('#aichwp_manual_indexing_button')
@@ -90,7 +100,7 @@ jQuery(document).ready(function ($) {
         }
       },
       error: function () {
-        $('#aichwp_indexing_status').text(
+        $('#aichwp_indexing_status').html(
           'An error occurred while checking the indexing progress.'
         )
         $('#aichwp_manual_indexing_button').prop('disabled', false)

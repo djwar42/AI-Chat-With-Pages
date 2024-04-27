@@ -125,6 +125,11 @@ function aichwp_create_post_embeddings_callback($post_id, $content_chunk, $chunk
 
       //error_log("Count:" . count(array_filter($progress['post_ids'])));
 
+      // Check if all posts are completed
+      if ($progress['processed'] === $progress['total']) {
+          delete_option('aichwp_embeddings_progress');
+      }
+
       aichwp_release_semaphore_lock();
 
   } catch (Exception $e) {
@@ -253,14 +258,13 @@ add_action('wp_ajax_aichwp_manual_indexing', 'aichwp_manual_indexing_callback');
 add_action('wp_ajax_aichwp_get_indexing_progress', 'aichwp_get_indexing_progress_callback');
 
 function aichwp_get_indexing_progress_callback() {
-    $progress = get_option('aichwp_embeddings_progress', [
-        'total'     => 0,
-        'processed' => 0,
-        'failed'    => [],
-        'post_ids'  => [],
-    ]);
+  $progress = get_option('aichwp_embeddings_progress');
 
-    wp_send_json_success($progress);
+  if ($progress === false) {
+      wp_send_json_success(null);
+  } else {
+      wp_send_json_success($progress);
+  }
 }
 
 /**

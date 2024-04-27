@@ -214,7 +214,7 @@ function aichwp_manual_indexing_button_field() {
   $button_text = ($total_indexed > 0) ? 'Re-Index Site Content' : 'Index Site Content';
 
   echo '<button type="button" id="aichwp_manual_indexing_button" class="button button-primary">' . $button_text . '</button>';
-  echo '<span id="aichwp_indexing_status" style="margin-left: 10px;">' . $total_indexed . ' documents indexed.</span>';
+  echo '<span id="aichwp_indexing_status" style="margin-left: 10px; color: green;">' . $total_indexed . ' documents indexed.</span>';
 }
 
 /**
