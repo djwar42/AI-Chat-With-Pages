@@ -227,20 +227,7 @@ function aichwp_get_total_indexed_documents() {
   return intval($total_indexed);
 }
 
-add_action('wp_ajax_aichwp_manual_indexing', 'aichwp_manual_indexing_callback');
 
-function aichwp_manual_indexing_callback() {
-    aichwp_clear_embeddings_data();
-    aichwp_create_initial_embeddings();
-
-    $total_indexed = aichwp_get_total_indexed_documents();
-    $total_failed = aichwp_get_total_failed_documents();
-
-    wp_send_json_success(array(
-        'total_indexed' => $total_indexed,
-        'total_failed' => $total_failed
-    ));
-}
 
 /**
  * Output messages per hour limit field
