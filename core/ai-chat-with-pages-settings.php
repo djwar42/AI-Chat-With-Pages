@@ -65,6 +65,8 @@ add_action('admin_init', 'aichwp_register_settings');
 
 function aichwp_register_settings() {
 
+  error_log('aichwp_register_settings');
+
   $options = get_option('aichwp_settings', array());
   $options_update_needed = false;
 
@@ -346,6 +348,7 @@ function aichwp_initial_suggested_question_field($args) {
  * Validate input
  */
 function aichwp_validate_settings($input) {
+  error_log('aichwp_validate_settings');
   $output = array();
 
   // Validate OpenAI api key
@@ -402,7 +405,7 @@ $options = get_option('aichwp_settings', array());
 
 function aichwp_openai_key_missing_notice() {
   ?>
-  <div class="notice notice-error">
+  <div class="notice notice-warning">
       <p><?php _e('OpenAI API Key not set for AI Chat With Pages. <a href="' . admin_url('options-general.php?page=aichwp') . '">Set the API key</a> to enable the chat functionality.', 'ai-chat-with-pages'); ?></p>
   </div>
   <?php
