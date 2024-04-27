@@ -223,7 +223,7 @@ function aichwp_manual_indexing_button_field() {
 function aichwp_get_total_indexed_documents() {
   global $wpdb;
   $table_name = $wpdb->prefix . 'aichat_post_embeddings';
-  $total_indexed = $wpdb->get_var("SELECT COUNT(*) FROM $table_name WHERE is_active = 1");
+  $total_indexed = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM $table_name WHERE is_active = 1");
   return intval($total_indexed);
 }
 

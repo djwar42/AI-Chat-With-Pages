@@ -57,10 +57,7 @@ jQuery(document).ready(function ($) {
       },
       success: function (response) {
         var total_indexed = response.data.total_indexed
-        var total_failed = response.data.total_failed
-        $('#aichwp_indexing_status').text(
-          total_indexed + ' documents indexed. ' + total_failed + ' failed.'
-        )
+        $('#aichwp_indexing_status').text(total_indexed + ' documents indexed.')
         button.prop('disabled', false)
         button.text('Re-Index Site Content')
       },
