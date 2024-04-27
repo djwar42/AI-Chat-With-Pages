@@ -9,10 +9,8 @@
     "react-scripts": "5.0.1"
   },
   "scripts": {
-    "start": "react-scripts start",
     "build": "react-scripts build && node rename.js",
     "watch": "nodemon --watch src --exec \"npm run build\"",
-    "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
