@@ -52,10 +52,18 @@ jQuery(document).ready(function ($) {
         action: 'aichwp_get_indexing_progress'
       },
       success: function (response) {
-        var progress = response.data
+        var progress = response.data || null
+
+        console.log(progress)
 
         if (progress === null) {
-          // aichwp_embeddings_progress doesn't exist, leave the status as is
+          // aichwp_embeddings_progress is deleted, indicating indexing is completed
+          $('#aichwp_indexing_status').html(
+            "<span style='color: green;'>Indexing completed!</span>"
+          )
+          $('#aichwp_manual_indexing_button')
+            .prop('disabled', false)
+            .text('Re-Index Site Content')
           return
         }
 
@@ -127,6 +135,4 @@ jQuery(document).ready(function ($) {
       }
     })
   })
-
-  checkIndexingProgress()
 })
