@@ -33,6 +33,9 @@ final class OpenAIChat extends BaseLLM
         $wpaichw_settings = get_option('wpaichw_settings');
         $this->openaiApiKey = $wpaichw_settings['openai_api_key'] ?? null;
 
+        error_log(print_r($wpaichw_settings, true));
+        error_log('$this->openaiApiKey ' . $this->openaiApiKey);
+
         if ($client === null) {
             $client = \OpenAI::client($this->openaiApiKey);
         }
