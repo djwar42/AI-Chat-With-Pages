@@ -75,21 +75,33 @@ function aichwp_create_initial_embeddings() {
 add_action('aichwp_create_post_embeddings', 'aichwp_create_post_embeddings_callback', 10, 4);
 
 function awchwp_get_posts() {
-  // Get all published posts
-  $post_types = get_post_types(['public' => true], 'names');
-  $post_types[] = 'wp_template';
-  unset($post_types['attachment']);
-  $posts = get_posts([
-      'post_type' => $post_types,
-      'post_status' => 'publish',
-      'posts_per_page' => -1,
-  ]);
+    // Get all published posts
+    $post_types = get_post_types(['public' => true], 'names');
+    unset($post_types['attachment']);
 
-  $posts = array_filter($posts, function ($post) {
-      return !empty(trim(preg_replace("/\n\s*\n/", "\n", strip_tags($post->post_content))));
-  });
+    $posts = get_posts([
+        'post_type' => $post_types,
+        'post_status' => 'publish',
+        'posts_per_page' => -1,
+    ]);
 
-  return $posts;
+    // Get wp_template posts separately
+    $wp_template_posts = get_posts([
+        'post_type' => 'wp_template',
+        'post_status' => 'publish',
+        'posts_per_page' => -1,
+    ]);
+
+    // Merge the two arrays
+    $posts = array_merge($posts, $wp_template_posts);
+
+    error_log(print_r($posts, true));
+
+    $posts = array_filter($posts, function ($post) {
+        return !empty(trim(preg_replace("/\n\s*\n/", "\n", strip_tags($post->post_content))));
+    });
+
+    return $posts;
 }
 
 function aichwp_create_post_embeddings_callback($post_id, $content_chunk, $chunk_index, $total_chunks) {
