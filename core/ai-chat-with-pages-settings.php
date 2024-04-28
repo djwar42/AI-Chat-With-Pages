@@ -32,21 +32,26 @@ function aichwp_render_settings_page() {
   $options = get_option('aichwp_settings', array());
   if (empty($options['openai_api_key'])) {
       echo "<h2 style='margin-top: 15px; font-size: 16px; color: #3c82f6;'>Open AI API Key is not set, the chat app will not load on the front end until API Key is set.<br/>Please visit &rarr; <a style='text-decoration: underline;' href='https://platform.openai.com/api-keys'>Open AI</a> to create an api key.</h2>";
+
+      aichwp_unschedule_initial_embeddings();
+      delete_option('aichwp_embeddings_progress');
   } 
   else {
     try {
         $openAi = new OpenAIChat(['temperature' => 0.8]);
         $response = $openAi->generateResultString(['This is a test. Reply <true> and nothing else.']);
 
-        $is_indexing = get_option('aichwp_post_embedding_in_progress');
         $is_stale = get_option('aichwp_post_embeddings_are_stale');
 
-        if ($is_indexing == 0 && $is_stale == 1) {
+        if ($is_stale == 1) {
             aichwp_schedule_initial_embeddings();
             sleep(0.2);
         }
     } catch (Exception $e) {
         echo "<h2 style='margin-top: 15px; font-size: 18px; color: red;'>Open AI Key is not functioning correctly, please check the key for validity.</h2>";
+
+        aichwp_unschedule_initial_embeddings();
+        delete_option('aichwp_embeddings_progress');
     }
   }
   ?>

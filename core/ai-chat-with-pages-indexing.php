@@ -14,9 +14,6 @@ function aichwp_create_initial_embeddings() {
 
   //error_log('aichwp_create_initial_embeddings');
 
-  // Set a flag to indicate that the embedding creation process is ongoing
-  update_option('aichwp_post_embedding_in_progress', 1);
-
   $posts = awchwp_get_posts();
 
   // Get the total number of posts
@@ -146,7 +143,6 @@ function aichwp_create_post_embeddings_callback($post_id, $content_chunk, $chunk
         // Check if all posts are completed
         if ($progress['processed'] === $progress['total']) {
             delete_option('aichwp_embeddings_progress');
-            update_option('aichwp_post_embedding_in_progress', 0);
             update_option('aichwp_post_embeddings_are_stale', 0);
         }
 
@@ -410,4 +406,5 @@ function aichwp_plugin_activation() {
  */
 function aichwp_plugin_deactivation() {
     aichwp_unschedule_initial_embeddings();
+    delete_option('aichwp_embeddings_progress');
 }
