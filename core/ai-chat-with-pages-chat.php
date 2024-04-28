@@ -228,7 +228,7 @@ $concatenatedDocuments
 
 Question: $query
 EOD;
-  error_log("--- PROMPT ---\n" . $prompt);
+  //error_log("--- PROMPT ---\n" . $prompt);
 
   // Query the index and generate the response
   try {
