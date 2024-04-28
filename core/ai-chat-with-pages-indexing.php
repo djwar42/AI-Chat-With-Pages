@@ -14,15 +14,6 @@ function aichwp_create_initial_embeddings() {
 
   //error_log('aichwp_create_initial_embeddings');
 
-  $options = get_option('aichwp_settings', array());
-
-  // Check if a valid OpenAI API key exists
-  if (!isset($options['openai_api_key']) || empty($options['openai_api_key'])) {
-    // Display an admin notice indicating that a valid API key is required
-    add_action('admin_notices', 'aichwp_openai_key_missing_notice');
-    return;
-  }
-
   // Set a flag to indicate that the embedding creation process is ongoing
   update_option('aichwp_post_embedding_in_progress', 1);
 

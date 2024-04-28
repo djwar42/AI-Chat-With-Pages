@@ -25,10 +25,13 @@ function aichwp_register_settings_page() {
  * Render settings page
 */
 function aichwp_render_settings_page() {
+  if (!current_user_can('manage_options')) {
+    return;
+  }
 
   $options = get_option('aichwp_settings', array());
   if (empty($options['openai_api_key'])) {
-      add_action('admin_notices', 'aichwp_openai_key_missing_notice');
+      echo "<h2 style='margin-top: 15px; font-size: 18px; color: red;'>Open AI API Key is not set, the chat app will not load on the front end until API Key is set.</h2>";
   } 
   else {
     try {
@@ -45,10 +48,6 @@ function aichwp_render_settings_page() {
     } catch (Exception $e) {
         echo "<h2 style='margin-top: 15px; font-size: 18px; color: red;'>Open AI Key is not functioning correctly, please check the key for validity.</h2>";
     }
-  }
-
-  if (!current_user_can('manage_options')) {
-    return;
   }
   ?>
   
@@ -240,7 +239,7 @@ function aichwp_indexing_progress_indicator_field() {
   $options = get_option('aichwp_settings', array());
 
   if (!isset($options['openai_api_key']) || empty($options['openai_api_key'])) {
-    echo '<span id="aichwp_indexing_status" style="color: red;">&nbsp;Please set your OpenAI API Key above.</span>';
+    echo '<span id="aichwp_indexing_status">&nbsp;Please set your OpenAI API Key above.</span>';
   } else {
     echo '<span id="aichwp_indexing_status">'. aichwp_get_total_indexed_documents() .' documents indexed.</span>';
   }
@@ -255,41 +254,6 @@ function aichwp_get_total_indexed_documents() {
   $total_indexed = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM $table_name WHERE is_active = 1");
   return intval($total_indexed);
 }
-
-// /**
-//  * Get the IDs of indexed documents
-//  */
-// function aichwp_get_indexed_documents_ids() {
-//   global $wpdb;
-//   $table_name = $wpdb->prefix . 'aichat_post_embeddings';
-//   $total_indexed = $wpdb->get_results("SELECT DISTINCT post_id FROM $table_name"); // WHERE is_active = 1
-//   return $total_indexed;
-// }
-
-// /**
-//  * Get the IDs of all posts
-//  */
-// function aichwp_get_posts_ids() {
-//   $post_types = get_post_types(['public' => true], 'names');
-//   $post_types[] = 'wp_template';
-//   unset($post_types['attachment']);
-
-//   $posts = get_posts([
-//       'post_type' => $post_types,
-//       'post_status' => 'publish',
-//       'posts_per_page' => -1,
-//   ]);
-
-//   $filtered_ids = array_map(function ($post) {
-//       $content = trim(preg_replace("/\n\s*\n/", "\n", strip_tags($post->post_content)));
-//       if (!empty($content)) {
-//           return $post->ID;
-//       }
-//       return null;
-//   }, $posts);
-
-//   return array_filter($filtered_ids);
-// }
 
 /**
  * Output messages per hour limit field
@@ -467,27 +431,6 @@ function aichwp_validate_settings($input) {
 
   return $output;
 }
-
-
-function aichwp_openai_key_missing_notice() {
-  ?>
-  <div class="notice notice-warning">
-      <p><?php _e('OpenAI API Key not set for AI Chat With Pages. <a href="' . admin_url('options-general.php?page=aichwp') . '">Set the API key</a> to enable the chat functionality.', 'ai-chat-with-pages'); ?></p>
-  </div>
-  <?php
-}
-
-//function aichwp_site_content_not_indexed_notice() {
-  /*?>
-  <div class="notice notice-warning">
-      <p><?php _e('Site content not indexed for AI Chat With Pages. Please wait for the indexing process to complete.', 'ai-chat-with-pages'); ?></p>
-  </div>
-  <?php*/
-//}
-
-// if (aichwp_get_total_indexed_documents() == 0) {
-//   add_action('admin_notices', 'aichwp_site_content_not_indexed_notice');
-// }
 
 /**
  * Enqueue scripts and styles for the plugin's admin page

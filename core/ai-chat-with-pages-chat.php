@@ -283,36 +283,40 @@ EOD;
 */
 add_action('wp_enqueue_scripts', 'aichwp_enqueue_scripts');
 function aichwp_enqueue_scripts() {
-  wp_enqueue_style('aichwp-chat-style', AICHWP_PLUGIN_URL . 'core/js/chat-app/build/static/css/aichwp.css', [], '1.0');
-  wp_enqueue_script('aichwp-chat-script', AICHWP_PLUGIN_URL . 'core/js/chat-app/build/static/js/aichwp.js', ['jquery'], '1.0', true);
-
   $options = get_option('aichwp_settings', array());
-  $color_vars = [
-    'aichwpBgColor' => $options['aichwpBgColor'] ?? '#f3f4f6',
-    'aichwpAIChatMessageBgColor' => $options['aichwpAIChatMessageBgColor'] ?? '#3c82f6',
-    'aichwpAIChatMessageTextColor' => $options['aichwpAIChatMessageTextColor'] ?? '#ffffff',
-    'aichwpUserChatMessageBgColor' => $options['aichwpUserChatMessageBgColor'] ?? '#ffffff',
-    'aichwpUserChatMessageTextColor' => $options['aichwpUserChatMessageTextColor'] ?? '#001827',
-    'aichwpChatClearChatTextColor' => $options['aichwpChatClearChatTextColor'] ?? '#001827',
-    'aichwpUserAvatarColor' => $options['aichwpUserAvatarColor'] ?? '#001827',
-    'aichwpLoadingIconColor' => $options['aichwpLoadingIconColor'] ?? '#3c82f6',
-    'aichwpSendButtonColor' => $options['aichwpSendButtonColor'] ?? '#3c82f6',
-    'aichwpSendButtonTextColor' => $options['aichwpSendButtonTextColor'] ?? '#ffffff',
-    'aichwpChatOpenButtonColor' => $options['aichwpChatOpenButtonColor'] ?? '#3c82f6',
-  ];
+  
+  // Check if the OpenAI API key is set
+  if (!empty($options['openai_api_key'])) {
+    wp_enqueue_style('aichwp-chat-style', AICHWP_PLUGIN_URL . 'core/js/chat-app/build/static/css/aichwp.css', [], '1.0');
+    wp_enqueue_script('aichwp-chat-script', AICHWP_PLUGIN_URL . 'core/js/chat-app/build/static/js/aichwp.js', ['jquery'], '1.0', true);
 
-  $chat_vars = [
-    'chat_welcome_message' => $options['chat_welcome_message'] ?? '',
-    'initial_suggested_question_1' => $options['initial_suggested_question_1'] ?? '',
-    'initial_suggested_question_2' => $options['initial_suggested_question_2'] ?? '',
-    'initial_suggested_question_3' => $options['initial_suggested_question_3'] ?? '',
-  ];
+    $color_vars = [
+      'aichwpBgColor' => $options['aichwpBgColor'] ?? '#f3f4f6',
+      'aichwpAIChatMessageBgColor' => $options['aichwpAIChatMessageBgColor'] ?? '#3c82f6',
+      'aichwpAIChatMessageTextColor' => $options['aichwpAIChatMessageTextColor'] ?? '#ffffff',
+      'aichwpUserChatMessageBgColor' => $options['aichwpUserChatMessageBgColor'] ?? '#ffffff',
+      'aichwpUserChatMessageTextColor' => $options['aichwpUserChatMessageTextColor'] ?? '#001827',
+      'aichwpChatClearChatTextColor' => $options['aichwpChatClearChatTextColor'] ?? '#001827',
+      'aichwpUserAvatarColor' => $options['aichwpUserAvatarColor'] ?? '#001827',
+      'aichwpLoadingIconColor' => $options['aichwpLoadingIconColor'] ?? '#3c82f6',
+      'aichwpSendButtonColor' => $options['aichwpSendButtonColor'] ?? '#3c82f6',
+      'aichwpSendButtonTextColor' => $options['aichwpSendButtonTextColor'] ?? '#ffffff',
+      'aichwpChatOpenButtonColor' => $options['aichwpChatOpenButtonColor'] ?? '#3c82f6',
+    ];
 
-  wp_localize_script('aichwp-chat-script', 'aichwp_color_vars', $color_vars);
-  wp_localize_script('aichwp-chat-script', 'aichwp_chat_vars', $chat_vars);
-  wp_localize_script('aichwp-chat-script', 'aichwp_ajax', [
-    'ajax_url' => admin_url('admin-ajax.php')
-  ]);
+    $chat_vars = [
+      'chat_welcome_message' => $options['chat_welcome_message'] ?? '',
+      'initial_suggested_question_1' => $options['initial_suggested_question_1'] ?? '',
+      'initial_suggested_question_2' => $options['initial_suggested_question_2'] ?? '',
+      'initial_suggested_question_3' => $options['initial_suggested_question_3'] ?? '',
+    ];
+
+    wp_localize_script('aichwp-chat-script', 'aichwp_color_vars', $color_vars);
+    wp_localize_script('aichwp-chat-script', 'aichwp_chat_vars', $chat_vars);
+    wp_localize_script('aichwp-chat-script', 'aichwp_ajax', [
+      'ajax_url' => admin_url('admin-ajax.php')
+    ]);
+  }
 }
 
 /**
