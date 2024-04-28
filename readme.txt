@@ -1,6 +1,6 @@
 === AI Chat With Pages ===
-Author URI: https://github.com/djwar42/Wordpress-AI-Chat-With-Pages
-Plugin URI: https://github.com/djwar42
+Author URI: https://github.com/djwar42
+Plugin URI: https://github.com/djwar42/Wordpress-AI-Chat-With-Pages
 Description: An AI chatbot that allows users to chat with your site content.
 Version: 1.0.0
 License: GPLv3
