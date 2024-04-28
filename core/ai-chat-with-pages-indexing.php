@@ -246,7 +246,7 @@ function aichwp_schedule_initial_embeddings() {
 
 function aichwp_unschedule_initial_embeddings() {
   // Clear any existing scheduled actions
-  as_unschedule_all_actions('aichwp_create_initial_embeddings');
+  as_unschedule_all_actions('aichwp_create_post_embeddings');
   as_unschedule_all_actions('aichwp_update_post_embeddings');
   
 
