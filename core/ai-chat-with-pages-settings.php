@@ -31,7 +31,7 @@ function aichwp_render_settings_page() {
 
   $options = get_option('aichwp_settings', array());
   if (empty($options['openai_api_key'])) {
-      echo "<h2 style='margin-top: 15px; font-size: 18px; color: red;'>Open AI API Key is not set, the chat app will not load on the front end until API Key is set.</h2>";
+      echo "<h2 style='margin-top: 15px; font-size: 16px; color: #3c82f6;'>Open AI API Key is not set, the chat app will not load on the front end until API Key is set.<br/>Please visit &rarr; <a style='text-decoration: underline;' href='https://platform.openai.com/api-keys'>Open AI</a> to create an api key.</h2>";
   } 
   else {
     try {
