@@ -34,8 +34,8 @@ class VectorstoreIndexCreator
         $this->vectorstoreCls = $vectorstoreCls ?? SimpleStupidVectorStore::class;
         $this->textSplitter   = $textSplitter ?? new RecursiveCharacterTextSplitter(
             [
-                'chunk_size' => 500,
-                'chunk_overlap' => 0
+                'chunk_size' => 250,
+                'chunk_overlap' => 25
             ]
         );
         $this->embedding = $embedding ?? new OpenAIEmbeddings();
