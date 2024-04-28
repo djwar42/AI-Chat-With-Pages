@@ -111,7 +111,21 @@ function aichwp_chat_handler() {
   $vectorstore = new SimpleStupidVectorStore([]);
   $collection = $vectorstore->getOrCreateCollection('posts', []);
   $embeddings = new OpenAIEmbeddings([]);
-  $queryEmbedding = $embeddings->embedQuery($query);
+
+  // Query the index and generate the response
+  try {
+      $queryEmbedding = $embeddings->embedQuery($query);
+  } catch (Exception $e) {
+      $response_data = [
+        'query' => $query,
+        'response' => 'An error occurred while generating the response, check the OpenAI API Key.',
+        'references' => [],
+        'history' => json_encode(['history' => []]),
+        'chat_in_progress' => false,
+      ];
+      wp_send_json_success($response_data);
+      return;
+  }
 
   $ragResults = $collection->similaritySearchWithScore($queryEmbedding, 4, $selectedPostTypes);
 
@@ -217,7 +231,19 @@ EOD;
   //error_log("--- PROMPT ---\n" . $prompt);
 
   // Query the index and generate the response
-  $response = $openAi->generateResultString([$prompt]);
+  try {
+      $response = $openAi->generateResultString([$prompt]);
+  } catch (Exception $e) {
+      $response_data = [
+        'query' => $query,
+        'response' => 'An error occurred while generating the response, check the OpenAI API Key.',
+        'references' => [],
+        'history' => json_encode(['history' => []]),
+        'chat_in_progress' => false,
+      ];
+      wp_send_json_success($response_data);
+      return;
+  }
 
   // Find the top source document with a good score
   $topSourceDocument = null;

@@ -9,7 +9,7 @@
  * @wordpress-plugin
  * Plugin Name:   AI Chat With Pages
  * Plugin URI:    wordpressaichatwithpages.com
- * Description:   Creates a chatbot that can index your sites content and allow the user to chat with it.
+ * Description:   An AI chatbot that can index your sites pages, posts and other custom post types and allow the user to chat with it.
  * Version:       1.0.0
  * Author:        Daniel W
  * Author URI:    wordpressaichatwithpages.com
@@ -45,8 +45,6 @@ require_once AICHWP_PLUGIN_DIR . 'core/ai-chat-with-pages-indexing.php';
 require_once AICHWP_PLUGIN_DIR . 'core/ai-chat-with-pages-chat.php';
 
 
-// Schedule the creation of initial tables when the plugin is activated
-register_activation_hook(AICHWP_PLUGIN_FILE, 'aichwp_create_initial_tables');
+register_activation_hook(AICHWP_PLUGIN_FILE, 'aichwp_plugin_activation');
 
-// // Clear scheduled actions and progress option when the plugin is deactivated
-register_deactivation_hook(AICHWP_PLUGIN_FILE, 'aichwp_clear_embeddings_progress');
+register_deactivation_hook(AICHWP_PLUGIN_FILE, 'aichwp_plugin_deactivation');

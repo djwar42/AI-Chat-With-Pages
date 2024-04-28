@@ -1,5 +1,9 @@
 <?php
 // ai-chat-with-pages-settings.php
+require_once AICHWP_PLUGIN_DIR .'/vendor/autoload.php';
+
+use Kambo\Langchain\LLMs\OpenAIChat;
+
 /**
  * Register settings page
 */
@@ -13,6 +17,28 @@ function aichwp_register_settings_page() {
  * Render settings page
 */
 function aichwp_render_settings_page() {
+
+  $options = get_option('aichwp_settings', array());
+  if (empty($options['openai_api_key'])) {
+      add_action('admin_notices', 'aichwp_openai_key_missing_notice');
+  } 
+  else {
+    try {
+        $openAi = new OpenAIChat(['temperature' => 0.8]);
+        $response = $openAi->generateResultString(['This is a test. Reply <true> and nothing else.']);
+
+        $is_indexing = get_option('aichwp_post_embedding_in_progress');
+        $is_stale = get_option('aichwp_post_embeddings_are_stale');
+
+        if ($is_indexing == 0 && $is_stale == 1) {
+            aichwp_schedule_initial_embeddings();
+            sleep(0.2);
+        }
+    } catch (Exception $e) {
+        echo "<h2 style='margin-top: 15px; font-size: 18px; color: red;'>Open AI Key is not functioning correctly, please check the key for validity.</h2>";
+    }
+  }
+
   if (!current_user_can('manage_options')) {
     return;
   }
@@ -101,11 +127,11 @@ function aichwp_register_settings() {
     $options_update_needed = true;
   }
 
-  // Add settings section for manual indexing
-  add_settings_section('aichwp_manual_indexing', 'Indexing', 'aichwp_manual_indexing_section_text', 'aichwp');
+  // Add settings section for indexing progress
+  add_settings_section('aichwp_indexing_progress', 'Indexing', 'aichwp_indexing_progress_section_text', 'aichwp');
 
-  // Add settings field for manual indexing button
-  add_settings_field('aichwp_manual_indexing_button', '', 'aichwp_manual_indexing_button_field', 'aichwp', 'aichwp_manual_indexing');
+  // Add settings field for indexing progress indicator
+  add_settings_field('aichwp_indexing_progress_indicator', '', 'aichwp_indexing_progress_indicator_field', 'aichwp', 'aichwp_indexing_progress');
 
   add_settings_section('aichwp_post_types', 'Post Types', 'aichwp_post_types_section_text', 'aichwp');
 
@@ -183,12 +209,6 @@ function aichwp_register_settings() {
   if ($options_update_needed) {
     update_option('aichwp_settings', $options);
   }
-
-  // echo "<pre style='margin-left: 300px;'>". print_r($options, true) ."</pre>";
-
-  // $options = get_option('aichwp_settings', array());
-
-  // echo "<pre style='margin-left: 300px;'>". print_r($options, true) ."</pre>";
 }
 
 /**
@@ -199,61 +219,23 @@ function aichwp_section_text() {
 }
 
 /**
- * Indexing section text
+ * Indexing progress section text
 */
-function aichwp_manual_indexing_section_text() {
-  echo 'Index your site content for AI Chat With Pages:';
+function aichwp_indexing_progress_section_text() {
+  echo 'Site content indexing:';
 }
 
 /**
-* Output manual indexing button field
+* Output indexing progress indicator field
 */
-function aichwp_manual_indexing_button_field() {
+function aichwp_indexing_progress_indicator_field() {
   $options = get_option('aichwp_settings', array());
 
-  $indexed_posts_ids = array_column(aichwp_get_indexed_documents_ids(), 'post_id');
-  $all_posts_ids = aichwp_get_posts_ids();
-
-  $missing_posts_ids = array_diff($all_posts_ids, $indexed_posts_ids);
-  $extra_posts_ids = array_diff($indexed_posts_ids, $all_posts_ids);
-
-  error_log('Missing posts: ' . print_r($missing_posts_ids, true));
-  error_log('Extra posts: ' . print_r($extra_posts_ids, true));
-
-  // Remove extra post IDs from the aichat_post_embeddings table
-  global $wpdb;
-  foreach ($extra_posts_ids as $post_id) {
-      $wpdb->delete(
-          "{$wpdb->prefix}aichat_post_embeddings",
-          ['post_id' => $post_id]
-      );
+  if (!isset($options['openai_api_key']) || empty($options['openai_api_key'])) {
+    echo '<span id="aichwp_indexing_status" style="color: red;">&nbsp;Please set your OpenAI API Key above.</span>';
+  } else {
+    echo '<span id="aichwp_indexing_status">'. aichwp_get_total_indexed_documents() .' documents indexed.</span>';
   }
-
-  // Check if missing posts are in progress of being embedded
-  $scheduled_posts_ids = [];
-  foreach ($missing_posts_ids as $key => $post_id) {
-      $embedding_in_progress = get_post_meta($post_id, 'embedding_in_progress', true);
-
-      if ($embedding_in_progress === '1') {
-          error_log("Post $post_id is in progress of being embedded.");
-          $scheduled_posts_ids[] = $post_id;
-          unset($missing_posts_ids[$key]);
-      } else {
-          error_log("Post $post_id is not currently being embedded.");
-      }
-  }
-
-  if(!isset($options['openai_api_key']) || empty($options['openai_api_key'])) {
-    echo '<span id="aichwp_indexing_status" style="color: red;">&nbsp;Please set your OpenAI API Key above before commencing indexing.</span>';
-  }
-  else if(empty($missing_posts_ids)) {
-    echo '<span id="aichwp_indexing_status" style="color: green;">&nbsp;' . count($indexed_posts_ids) . ' documents indexed.<br/>&nbsp;Any new content site content will be automatically indexed.</span>';
-  }
-  else {
-    echo '<button type="button" id="aichwp_manual_indexing_button" class="button button-primary">Index Site Content</button>';
-    echo '<span id="aichwp_indexing_status" style="color: red;">&nbsp;You must index your documents!</span>';
-  }
-  
 }
 
 /**
@@ -262,40 +244,44 @@ function aichwp_manual_indexing_button_field() {
 function aichwp_get_total_indexed_documents() {
   global $wpdb;
   $table_name = $wpdb->prefix . 'aichat_post_embeddings';
-  $total_indexed = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM $table_name"); // WHERE is_active = 1
+  $total_indexed = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM $table_name WHERE is_active = 1");
   return intval($total_indexed);
 }
 
-function aichwp_get_indexed_documents_ids() {
-  global $wpdb;
-  $table_name = $wpdb->prefix . 'aichat_post_embeddings';
-  $total_indexed = $wpdb->get_results("SELECT DISTINCT post_id FROM $table_name"); // WHERE is_active = 1
-  return $total_indexed;
-}
+// /**
+//  * Get the IDs of indexed documents
+//  */
+// function aichwp_get_indexed_documents_ids() {
+//   global $wpdb;
+//   $table_name = $wpdb->prefix . 'aichat_post_embeddings';
+//   $total_indexed = $wpdb->get_results("SELECT DISTINCT post_id FROM $table_name"); // WHERE is_active = 1
+//   return $total_indexed;
+// }
 
-function aichwp_get_posts_ids() {
-  // Get all published posts
-  $post_types = get_post_types(['public' => true], 'names');
-  $post_types[] = 'wp_template';
-  unset($post_types['attachment']);
+// /**
+//  * Get the IDs of all posts
+//  */
+// function aichwp_get_posts_ids() {
+//   $post_types = get_post_types(['public' => true], 'names');
+//   $post_types[] = 'wp_template';
+//   unset($post_types['attachment']);
 
-  $posts = get_posts([
-      'post_type' => $post_types,
-      'post_status' => 'publish, draft, trash',
-      'posts_per_page' => -1,
-  ]);
+//   $posts = get_posts([
+//       'post_type' => $post_types,
+//       'post_status' => 'publish',
+//       'posts_per_page' => -1,
+//   ]);
 
-  $filtered_ids = array_map(function ($post) {
-      $content = trim(preg_replace("/\n\s*\n/", "\n", strip_tags($post->post_content)));
-      if (!empty($content)) {
-          return $post->ID;
-      }
-      return null;
-  }, $posts);
+//   $filtered_ids = array_map(function ($post) {
+//       $content = trim(preg_replace("/\n\s*\n/", "\n", strip_tags($post->post_content)));
+//       if (!empty($content)) {
+//           return $post->ID;
+//       }
+//       return null;
+//   }, $posts);
 
-  return array_filter($filtered_ids);
-}
-
+//   return array_filter($filtered_ids);
+// }
 
 /**
  * Output messages per hour limit field
@@ -343,7 +329,6 @@ function aichwp_color_field($args) {
  * Output API key field
 */
 function aichwp_openai_key_field() {
-  
   $options = get_option('aichwp_settings', array());
   
   if (!isset($options['openai_api_key'])) {
@@ -351,7 +336,6 @@ function aichwp_openai_key_field() {
   }
 
   echo '<input type="text" name="aichwp_settings[openai_api_key]" value="' . esc_attr($options['openai_api_key']) . '" />';
-
 }
 
 /**
@@ -417,8 +401,9 @@ function aichwp_validate_settings($input) {
   $output = array();
 
   // Validate OpenAI api key
-  if(isset($input['openai_api_key']))
+  if (isset($input['openai_api_key'])) {
     $output['openai_api_key'] = sanitize_text_field($input['openai_api_key']);
+  }
 
   // Validate messages per hour limit
   $input['messages_per_hour_limit'] = intval($input['messages_per_hour_limit']);
@@ -458,18 +443,22 @@ function aichwp_validate_settings($input) {
   $output['aichwpSendButtonTextColor'] = sanitize_text_field($input['aichwpSendButtonTextColor']);
   $output['aichwpChatOpenButtonColor'] = sanitize_text_field($input['aichwpChatOpenButtonColor']);
 
+  // Validate chat welcome message
   $output['chat_welcome_message'] = sanitize_textarea_field($input['chat_welcome_message']);
-  if(isset($input['initial_suggested_question_1']))
+
+  // Validate initial suggested questions
+  if (isset($input['initial_suggested_question_1'])) {
     $output['initial_suggested_question_1'] = sanitize_textarea_field($input['initial_suggested_question_1']);
-  if(isset($input['initial_suggested_question_2']))
+  }
+  if (isset($input['initial_suggested_question_2'])) {
     $output['initial_suggested_question_2'] = sanitize_textarea_field($input['initial_suggested_question_2']);
-  if(isset($input['initial_suggested_question_3']))
+  }
+  if (isset($input['initial_suggested_question_3'])) {
     $output['initial_suggested_question_3'] = sanitize_textarea_field($input['initial_suggested_question_3']);
+  }
 
   return $output;
 }
-
-$options = get_option('aichwp_settings', array());
 
 
 function aichwp_openai_key_missing_notice() {
@@ -480,23 +469,17 @@ function aichwp_openai_key_missing_notice() {
   <?php
 }
 
-function aichwp_site_content_not_indexed_notice() {
-  ?>
+//function aichwp_site_content_not_indexed_notice() {
+  /*?>
   <div class="notice notice-warning">
-      <p><?php _e('Site content not indexed for AI Chat With Pages. <a href="' . admin_url('options-general.php?page=aichwp') . '">Set the OpenAI API Key and index site content</a> to enable the chat functionality.', 'ai-chat-with-pages'); ?></p>
+      <p><?php _e('Site content not indexed for AI Chat With Pages. Please wait for the indexing process to complete.', 'ai-chat-with-pages'); ?></p>
   </div>
-  <?php
-}
+  <?php*/
+//}
 
-if (empty($options['openai_api_key'])) {
-  add_action('admin_notices', 'aichwp_openai_key_missing_notice');
-}
-
-if(aichwp_get_total_indexed_documents() == 0) {
-  add_action('admin_notices', 'aichwp_site_content_not_indexed_notice');
-}
-
-
+// if (aichwp_get_total_indexed_documents() == 0) {
+//   add_action('admin_notices', 'aichwp_site_content_not_indexed_notice');
+// }
 
 /**
  * Enqueue scripts and styles for the plugin's admin page
@@ -540,7 +523,6 @@ function aichwp_admin_enqueue_scripts($hook) {
       'initial_suggested_question_3' => $options['initial_suggested_question_3'] ?? '',
   ];
   wp_localize_script('aichwp-chat-script', 'aichwp_chat_vars', $chat_options);
-
 
   wp_localize_script('aichwp-admin-script', 'aichwp_ajax', [
     'ajax_url' => admin_url('admin-ajax.php'),
