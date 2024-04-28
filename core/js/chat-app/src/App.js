@@ -30,7 +30,7 @@ import {
 export default function App() {
   const [chatHistory, setChatHistory] = useState([])
   const [chatInput, setChatInput] = useState('')
-  const [chatMinimized, setChatMinimized] = useState(false)
+  const [chatMinimized, setChatMinimized] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [isAdminPage, setIsAdminPage] = useState(false)
   const [isSending, setIsSending] = useState(false)
@@ -42,7 +42,7 @@ export default function App() {
   useEffect(() => {
     const isAdmin = window.location.href.includes('/wp-admin/')
     setIsAdminPage(isAdmin)
-    localStorage.setItem('aichwp_chat_minimized', 'false')
+    isAdmin && localStorage.setItem('aichwp_chat_minimized', 'false')
   }, [])
 
   useEffect(() => {

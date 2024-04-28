@@ -10,7 +10,15 @@ use Kambo\Langchain\LLMs\OpenAIChat;
 add_action('admin_menu', 'aichwp_register_settings_page');
 
 function aichwp_register_settings_page() {
-  add_options_page('AI Chat With Pages Settings', 'AI Chat With Pages', 'manage_options', 'aichwp', 'aichwp_render_settings_page');
+  add_menu_page(
+      'AI Chat With Pages Settings', 
+      'AI Chat With Pages',
+      'manage_options', 
+      'aichwp', 
+      'aichwp_render_settings_page', 
+      'dashicons-format-chat',
+      25
+  );
 }
 
 /**
@@ -487,7 +495,7 @@ function aichwp_openai_key_missing_notice() {
 add_action('admin_enqueue_scripts', 'aichwp_admin_enqueue_scripts');
 
 function aichwp_admin_enqueue_scripts($hook) {
-  if ('settings_page_aichwp' != $hook) {
+  if ('toplevel_page_aichwp' != $hook) {
     return;
   }
 
