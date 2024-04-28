@@ -95,7 +95,7 @@ function awchwp_get_posts() {
     // Merge the two arrays
     $posts = array_merge($posts, $wp_template_posts);
 
-    error_log(print_r($posts, true));
+    // error_log(print_r($posts, true));
 
     $posts = array_filter($posts, function ($post) {
         return !empty(trim(preg_replace("/\n\s*\n/", "\n", strip_tags($post->post_content))));

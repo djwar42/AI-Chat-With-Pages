@@ -29,7 +29,7 @@ abstract class TextSplitter
      * @param int $chunkSize
      * @param int $chunkOverlap
      */
-    public function __construct(int $chunkSize = 1000, int $chunkOverlap = 200)
+    public function __construct(int $chunkSize = 500, int $chunkOverlap = 50)
     {
         if ($chunkOverlap > $chunkSize) {
             throw new Exception(
