@@ -9,8 +9,9 @@
  * @wordpress-plugin
  * Plugin Name:   AI Chat With Pages
  * Plugin URI:    wordpressaichatwithpages.com
- * Description:   An AI chatbot that can index your sites pages, posts and other custom post types and allow the user to chat with it.
+ * Description:   An AI chatbot that allows users to chat with your site content.
  * Version:       1.0.0
+ * License:       GPLv3
  * Author:        Daniel W
  * Author URI:    wordpressaichatwithpages.com
  * Text Domain:   ai-chat-with-pages
