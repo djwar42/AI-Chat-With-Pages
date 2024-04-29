@@ -54,12 +54,17 @@ jQuery(document).ready(function ($) {
       },
       success: function (response) {
         var progress = response.data || null
+        console.log('progress: ', progress)
+        console.log('indexingInProgress: ', indexingInProgress)
 
         if (progress === null && indexingInProgress === false) {
           return
         }
 
-        if (progress === null && indexingInProgress === true) {
+        if (
+          (progress === null && indexingInProgress === true) ||
+          progress.total === progress.processed
+        ) {
           $('#aichwp_indexing_status').html(
             "<span style='color: #3c82f6;'>&nbsp;Indexing completed!</span>"
           )
