@@ -77,7 +77,6 @@ jQuery(document).ready(function ($) {
 
         var completedCount = progress.processed
         var totalCount = progress.total
-        var failedCount = progress.failed.length
 
         $('#aichwp_indexing_status').html(
           "<span style='color: #3c82f6;'>&nbsp;" +
@@ -87,9 +86,7 @@ jQuery(document).ready(function ($) {
             completedCount +
             '/' +
             totalCount +
-            ' documents indexed. ' +
-            failedCount +
-            ' failed.</span>'
+            ' documents indexed'
         )
         indexingInProgress = true
         setTimeout(checkIndexingProgress, 2000)
