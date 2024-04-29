@@ -314,6 +314,7 @@ export default function App() {
                 disabled={isSending}
                 style={{
                   backgroundColor: aichwpSendButtonColor,
+                  opacity: isSending ? '0.8' : '1',
                   color: aichwpSendButtonTextColor,
                   cursor: isSending ? 'not-allowed' : 'pointer'
                 }}
