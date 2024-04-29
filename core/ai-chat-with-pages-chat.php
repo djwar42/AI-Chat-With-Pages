@@ -322,10 +322,14 @@ function aichwp_enqueue_scripts() {
 /**
  * Append the chat widget div to the HTML
  */
-add_action('wp_footer', 'aichwp_append_chat_app_div');
-
+add_action('wp_body_open', 'aichwp_append_chat_app_div');
 function aichwp_append_chat_app_div() {
-    ?>
-    <div id="aichwp-chat-app"></div>
-    <?php
+    $options = get_option('aichwp_settings', array());
+    
+    // Check if the OpenAI API key is set
+    if (!empty($options['openai_api_key'])) {
+        ?>
+        <div id="aichwp-chat-app"></div>
+        <?php
+    }
 }
