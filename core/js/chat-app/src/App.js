@@ -123,11 +123,15 @@ export default function App() {
     }
   }, [chatMinimized])
 
-  const formatMessageContent = (content) => {
+  const formatMessageContent = (content, role) => {
     const sanitizedContent = DOMPurify.sanitize(content)
+    const color =
+      role === 'AI'
+        ? aichwpAIChatMessageTextColor
+        : aichwpUserChatMessageTextColor
     const formattedContent = sanitizedContent.replace(
       /<a(.*?)>(.*?)<\/a>/g,
-      '<a$1 class="font-bold">$2</a>'
+      `<a$1 class="font-bold hover:underline block mt-2" style="color: ${color}">$2</a>`
     )
     return formattedContent
   }
@@ -208,7 +212,10 @@ export default function App() {
                     >
                       <p
                         dangerouslySetInnerHTML={{
-                          __html: formatMessageContent(message.content)
+                          __html: formatMessageContent(
+                            message.content,
+                            message.role
+                          )
                         }}
                       />
                     </div>
@@ -306,9 +313,7 @@ export default function App() {
                 onClick={handleSendMessage}
                 disabled={isSending}
                 style={{
-                  backgroundColor: isSending
-                    ? 'rgba(59, 130, 246, 0.5)'
-                    : aichwpSendButtonColor,
+                  backgroundColor: aichwpSendButtonColor,
                   color: aichwpSendButtonTextColor,
                   cursor: isSending ? 'not-allowed' : 'pointer'
                 }}
