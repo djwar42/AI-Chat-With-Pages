@@ -54,8 +54,6 @@ jQuery(document).ready(function ($) {
       },
       success: function (response) {
         var progress = response.data || null
-        console.log('progress: ', progress)
-        console.log('indexingInProgress: ', indexingInProgress)
 
         if (progress === null && indexingInProgress === false) {
           return
