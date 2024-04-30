@@ -217,16 +217,20 @@ function aichwp_chat_handler() {
   $prompt = <<<EOD
 You are a helpful chat assistant running on a wordpress website tasked with answering user queries about the content pages on the site, which will be provided to you in <context> tags. Try and avoid answering questions un-related to the content on the site. If you are unable to find a good answer, say you don't know.
 
-<conversationhistory>
-$conversationHistoryBuffer
-</conversationhistory>
-
 Use the following pieces of context to give a helpful answer to the question following:
 <context>
 $concatenatedDocuments
 </context>
 
-Question: $query
+<question>
+$query
+</question>
+
+<conversationhistory>
+$conversationHistoryBuffer
+</conversationhistory>
+
+
 EOD;
   //error_log("--- PROMPT ---\n" . $prompt);
 
