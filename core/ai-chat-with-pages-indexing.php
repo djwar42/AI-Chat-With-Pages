@@ -14,22 +14,18 @@ function aichwp_create_initial_embeddings() {
 
   //error_log('aichwp_create_initial_embeddings');
 
+  update_option('aichwp_create_initial_embeddings_running', 1);
+
   $posts = awchwp_get_posts();
 
   // Get the total number of posts
   $total_posts = count($posts);
 
-  //error_log('total_posts ' . $total_posts);
-
-  // Create an array of post IDs and mark them as not completed
-  $post_ids = array_fill_keys(wp_list_pluck($posts, 'ID'), false);
-
   // Update the progress option
   $progress = [
       'total' => $total_posts,
       'processed' => 0,
-      'failed' => [],
-      'post_ids' => $post_ids,
+      'failed' => 0,
   ];
   update_option('aichwp_embeddings_progress', $progress);
   aichwp_release_semaphore_lock();
@@ -50,12 +46,15 @@ function aichwp_create_initial_embeddings() {
       // Get the total number of chunks for the post
       $total_chunks = count($content_chunks);
 
+      //error_log("Post ID: $post->ID, Total Chunks: $total_chunks");
+
       // Directly delete all embeddings with the matching post_id
       $deleted = $wpdb->delete("{$wpdb->prefix}aichat_post_embeddings", ['post_id' => $post->ID]);
 
       // Schedule the fromPost() call for each content chunk
       foreach ($content_chunks as $chunk_index => $chunk) {
           $scheduleid = as_schedule_single_action($timestamp, 'aichwp_create_post_embeddings', [$post->ID, $chunk, $chunk_index, $total_chunks]);
+          //error_log("Scheduled post ID: $post->ID, Chunk: $chunk_index, Schedule ID: $scheduleid");
       }
   }
 }
@@ -83,8 +82,6 @@ function awchwp_get_posts() {
     // Merge the two arrays
     $posts = array_merge($posts, $wp_template_posts);
 
-    // error_log(print_r($posts, true));
-
     $posts = array_filter($posts, function ($post) {
         return !empty(trim(preg_replace("/\n\s*\n/", "\n", strip_tags($post->post_content))));
     });
@@ -94,7 +91,6 @@ function awchwp_get_posts() {
 
 function aichwp_create_post_embeddings_callback($post_id, $content_chunk, $chunk_index, $total_chunks) {
 
-    //error_log("aichwp_create_post_embeddings_callback: $post_id, $chunk_index, $total_chunks");
     // Retrieve the post
     $post = get_post($post_id);
 
@@ -134,15 +130,14 @@ function aichwp_create_post_embeddings_callback($post_id, $content_chunk, $chunk
 
         // Check if all chunks for the post are completed
         if (aichwp_are_all_chunks_completed($post_id, $total_chunks)) {
-            $progress['post_ids'][$post_id] = true;
             $progress['processed']++;
+            error_log("Completed post ID: $post_id  total_chunks: $total_chunks");
         }
 
         update_option('aichwp_embeddings_progress', $progress);
 
         // Check if all posts are completed
-        if ($progress['processed'] === $progress['total']) {
-            delete_option('aichwp_embeddings_progress');
+        if ($progress['processed'] + $progress['failed'] >= $progress['total']) {
             update_option('aichwp_post_embeddings_are_stale', 0);
         }
 
@@ -167,7 +162,7 @@ function aichwp_create_post_embeddings_callback($post_id, $content_chunk, $chunk
         } else {
             // If the retry count exceeds 5, add the post ID to the failed array
             $progress = get_option('aichwp_embeddings_progress');
-            $progress['failed'][] = $post_id;
+            $progress['failed']++;
             update_option('aichwp_embeddings_progress', $progress);
         }
     } catch (Throwable $e) {
@@ -178,7 +173,7 @@ function aichwp_create_post_embeddings_callback($post_id, $content_chunk, $chunk
 
         // Add the post ID to the failed array
         $progress = get_option('aichwp_embeddings_progress');
-        $progress['failed'][] = $post_id;
+        $progress['failed']++;
         update_option('aichwp_embeddings_progress', $progress);
     }
 }
@@ -233,31 +228,17 @@ function aichwp_release_semaphore_lock() {
   update_option('aichwp_embeddings_progress_semaphore', false);
 }
 
-function aichwp_schedule_initial_embeddings() {
-
-  //error_log('aichwp_schedule_initial_embeddings');
-
-  // Delete the progress option
-  delete_option('aichwp_embeddings_progress');
-
-  // Run the initial embeddings creation
-  aichwp_create_initial_embeddings();
-}
-
 function aichwp_unschedule_initial_embeddings() {
   // Clear any existing scheduled actions
   as_unschedule_all_actions('aichwp_create_post_embeddings');
-  as_unschedule_all_actions('aichwp_update_post_embeddings');
   
-
-  // Delete the progress option
-  delete_option('aichwp_embeddings_progress');
+  update_option('aichwp_create_initial_embeddings_running', 0);
 }
 
 function aichwp_get_indexing_progress() {
   $progress = get_option('aichwp_embeddings_progress');
 
-  if ($progress === false) {
+  if ($progress['processed'] + $progress['failed'] >= $progress['total']) {
       wp_send_json_success(null);
   } else {
       wp_send_json_success($progress);
@@ -394,7 +375,7 @@ function aichwp_plugin_activation() {
             $response = $openAi->generateResultString(['This is a test. Reply <true> and nothing else.']);
             
             // Trigger the embeddings creation
-            aichwp_schedule_initial_embeddings();
+            aichwp_create_initial_embeddings();
         } catch (Exception $e) {
             //error_log('No valid openai api key, halt.');
         }
@@ -406,5 +387,4 @@ function aichwp_plugin_activation() {
  */
 function aichwp_plugin_deactivation() {
     aichwp_unschedule_initial_embeddings();
-    delete_option('aichwp_embeddings_progress');
 }

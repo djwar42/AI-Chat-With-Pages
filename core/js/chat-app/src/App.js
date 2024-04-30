@@ -170,17 +170,19 @@ export default function App() {
         className={`mainChatContainer ${
           isAdminPage ? 'relative' : 'fixed bottom-[75px] right-4'
         } z-[500] rounded-lg ${
-          isAdminPage ? 'h-[500px] w-[450px]' : 'h-[50%] max-h-[500px]'
+          isAdminPage
+            ? 'h-[500px] w-[90%] max-w-[450px]'
+            : 'h-[50%] max-h-[500px] w-[90%] max-w-[450px]'
         } transform-gpu transition-transform duration-200 ease-in-out overflow-hidden origin-bottom-right shadow-2xl ${
           chatMinimized ? 'scale-0 duration-50' : 'scale-100'
         }`}
       >
         <div
-          className='w-[450px] h-full flex flex-col'
+          className='w-[100%] h-full flex flex-col'
           style={{ backgroundColor: aichwpBgColor }}
         >
           <div
-            className='mainChatWindow flex-grow overflow-y-auto'
+            className='mainChatWindow flex-grow overflow-y-auto pb-2'
             ref={chatWindowRef}
           >
             <div className='relative min-h-full flex flex-col'>
@@ -285,7 +287,7 @@ export default function App() {
                 )}
                 {chatHistory.some((message) => message.role === 'Human') && (
                   <a
-                    className={`clearChatButton cursor-pointer text-sm font-medium opacity-80 hover:opacity-100 absolute bottom-[5px] left-[7px] text-left`}
+                    className={`clearChatButton cursor-pointer text-sm font-medium opacity-80 hover:opacity-100 absolute bottom-[0px] left-[7px] text-left`}
                     onClick={handleClearChat}
                     style={{ color: aichwpChatClearChatTextColor }}
                   >
@@ -301,7 +303,7 @@ export default function App() {
           >
             <div className='flex items-center space-x-2'>
               <input
-                className='flex-1 rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:outline-none'
+                className='chatInput flex-1 rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:outline-none'
                 placeholder='Type your message...'
                 type='text'
                 value={chatInput}

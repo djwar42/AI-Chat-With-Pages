@@ -68,13 +68,6 @@ jQuery(document).ready(function ($) {
           return
         }
 
-        if (progress.total === progress.processed) {
-          $('#aichwp_indexing_status').html(
-            "<span style='color: #3c82f6;'>&nbsp;Indexing completed!</span>"
-          )
-          return
-        }
-
         var completedCount = progress.processed
         var totalCount = progress.total
 

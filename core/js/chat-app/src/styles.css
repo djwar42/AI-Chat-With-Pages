@@ -30,3 +30,9 @@ h6 {
     transform: rotate(360deg);
   }
 }
+
+@media (max-width: 300px) {
+  .chatInput {
+    max-width: 65%;
+  }
+}
