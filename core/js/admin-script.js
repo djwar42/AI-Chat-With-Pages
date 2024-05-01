@@ -12,6 +12,15 @@ jQuery(document).ready(function ($) {
     }
   })
 
+  // Toggle post meta fields list
+  $('.aichwp-toggle-meta-fields').on('click', function (e) {
+    e.preventDefault()
+    var postType = $(this).data('post-type')
+    $(
+      '.aichwp-post-meta-fields-list[data-post-type="' + postType + '"]'
+    ).toggle()
+  })
+
   // Reset color to default
   $('.aichwp-reset-color').on('click', function (e) {
     e.preventDefault()

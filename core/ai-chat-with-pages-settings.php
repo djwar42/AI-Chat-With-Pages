@@ -90,7 +90,7 @@ function aichwp_render_settings_page() {
     submit_button();
     ?>
   </form>
-  <div id="aichwp-chat-app" style="position: absolute; left: 520px; top: 900px;"></div>
+  <div id="aichwp-chat-app" style="position: absolute; left: 520px; top: 540px;"></div>
 
   <?php
 }
@@ -144,21 +144,6 @@ function aichwp_register_settings() {
   // Add settings field for indexing progress indicator
   add_settings_field('aichwp_indexing_progress_indicator', '', 'aichwp_indexing_progress_indicator_field', 'aichwp', 'aichwp_indexing_progress');
 
-  add_settings_section('aichwp_post_types', 'Post Types', 'aichwp_post_types_section_text', 'aichwp');
-
-  $post_types = aichwp_get_post_types();
-  foreach ($post_types as $post_type) {
-      $post_type_object = get_post_type_object($post_type);
-      add_settings_field(
-          'aichwp_post_type_' . $post_type,
-          $post_type_object->label,
-          'aichwp_post_type_field',
-          'aichwp',
-          'aichwp_post_types',
-          ['post_type' => $post_type]
-      );
-  }
-
   // Add settings section for colors
   add_settings_section('aichwp_colors', 'Colors', 'aichwp_colors_section_text', 'aichwp');
 
@@ -197,6 +182,31 @@ function aichwp_register_settings() {
   add_settings_field('aichwp_send_button_color', 'Send Button Color', 'aichwp_color_field', 'aichwp', 'aichwp_colors', ['color' => 'aichwpSendButtonColor']);
   add_settings_field('aichwp_send_button_text_color', 'Send Button Text Color', 'aichwp_color_field', 'aichwp', 'aichwp_colors', ['color' => 'aichwpSendButtonTextColor']);
   add_settings_field('aichwp_chat_open_button_color', 'Chat Open Button Color', 'aichwp_color_field', 'aichwp', 'aichwp_colors', ['color' => 'aichwpChatOpenButtonColor']);
+
+  // Add section for post types
+  add_settings_section('aichwp_post_types', 'Post Types', 'aichwp_post_types_section_text', 'aichwp');
+
+  $post_types = aichwp_get_post_types();
+  foreach ($post_types as $post_type) {
+      $post_type_object = get_post_type_object($post_type);
+      add_settings_field(
+          'aichwp_post_type_' . $post_type,
+          $post_type_object->label,
+          'aichwp_post_type_field',
+          'aichwp',
+          'aichwp_post_types',
+          ['post_type' => $post_type]
+      );
+
+      add_settings_field(
+          'aichwp_post_meta_fields_' . $post_type,
+          '',
+          'aichwp_post_meta_fields_field',
+          'aichwp',
+          'aichwp_post_types',
+          ['post_type' => $post_type]
+      );
+  }
 
   // Add settings section for chat options
   add_settings_section('aichwp_chat_options', 'Chat Options', 'aichwp_chat_options_section_text', 'aichwp');
@@ -371,6 +381,42 @@ function aichwp_initial_suggested_question_field($args) {
 }
 
 /**
+* Output post meta fields checkbox field
+**/
+function aichwp_post_meta_fields_field($args) {
+    $options = get_option('aichwp_settings', array());
+    $post_type = $args['post_type'];
+
+    $sample_post = get_posts([
+        'post_type' => $post_type,
+        'posts_per_page' => 1,
+    ]);
+
+    if (!empty($sample_post)) {
+        $meta_fields = get_post_custom($sample_post[0]->ID);
+
+        echo '<div class="aichwp-post-meta-fields-container">';
+        echo '<a href="#" class="aichwp-toggle-meta-fields" data-post-type="' . esc_attr($post_type) . '">Select meta fields</a>';
+        echo '<div class="aichwp-post-meta-fields-list" data-post-type="' . esc_attr($post_type) . '" style="display: none;">';
+
+        if (!empty($meta_fields)) {
+            foreach ($meta_fields as $meta_key => $meta_value) {
+                $checked = isset($options['post_meta_fields'][$post_type][$meta_key]) ? 'checked' : '';
+                echo '<label>';
+                echo '<input type="checkbox" name="aichwp_settings[post_meta_fields][' . esc_attr($post_type) . '][' . esc_attr($meta_key) . ']" value="1" ' . $checked . ' />';
+                echo esc_html($meta_key);
+                echo '</label><br>';
+            }
+        } else {
+            echo '<p>No meta fields exist.</p>';
+        }
+
+        echo '</div>';
+        echo '</div>';
+    }
+}
+
+/**
  * Validate input
  */
 function aichwp_validate_settings($input) {
@@ -403,6 +449,14 @@ function aichwp_validate_settings($input) {
       } else {
           // If the post type is not in the input array, set it as unchecked
           $output['post_types'][$post_type] = 0;
+      }
+
+      // Validate post meta fields for each post type
+      if (isset($input['post_meta_fields'][$post_type])) {
+          foreach ($input['post_meta_fields'][$post_type] as $meta_key => $meta_value) {
+              $sanitized_meta_key = sanitize_key($meta_key);
+              $output['post_meta_fields'][$post_type][$sanitized_meta_key] = 1;
+          }
       }
   }
 

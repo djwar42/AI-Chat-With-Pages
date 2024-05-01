@@ -131,7 +131,7 @@ function aichwp_create_post_embeddings_callback($post_id, $content_chunk, $chunk
         // Check if all chunks for the post are completed
         if (aichwp_are_all_chunks_completed($post_id, $total_chunks)) {
             $progress['processed']++;
-            error_log("Completed post ID: $post_id  total_chunks: $total_chunks");
+            //error_log("Completed post ID: $post_id  total_chunks: $total_chunks");
         }
 
         update_option('aichwp_embeddings_progress', $progress);

@@ -139,7 +139,7 @@ function aichwp_chat_handler() {
   foreach ($ragResults as $result) {
     $postId = $result[0]['metadata']['post_id'];
 
-    // Check if the post ID has already been processed
+    // Check if the post ID has already been processed, dont include duplicates
     if (in_array($postId, $processedPostIds)) {
         continue;
     }
@@ -171,7 +171,7 @@ function aichwp_chat_handler() {
             $concatenatedDocuments .= "--\n";
             $concatenatedDocuments .= "Post Title: " . $postTitle . "\n";
             $concatenatedDocuments .= "Post Type: " . $postType . "\n\n";
-            $concatenatedDocuments .= $excerptContent . "\n\n";
+            $concatenatedDocuments .= $excerptContent . "\n";
 
             // Add the post ID to the processed post IDs array
             $processedPostIds[] = $postId;
@@ -180,12 +180,30 @@ function aichwp_chat_handler() {
             $concatenatedDocuments .= "--\n";
             $concatenatedDocuments .= "Post Title: " . $postTitle . "\n";
             $concatenatedDocuments .= "Post Type: " . $postType . "\n\n";
-            $concatenatedDocuments .= $documentPassage . "\n\n";
+            $concatenatedDocuments .= $documentPassage . "\n";
 
             // Add the post ID to the processed post IDs array
             $processedPostIds[] = $postId;
         }
     }
+
+    // Get the selected post meta fields for the current post type
+    $selected_meta_fields = isset($options['post_meta_fields'][$postType]) ? $options['post_meta_fields'][$postType] : [];
+
+    // Append the selected meta fields to the concatenated string
+    if (!empty($selected_meta_fields)) {
+        $post_meta = get_post_meta($postId);
+        foreach ($selected_meta_fields as $meta_key => $meta_value) {
+            if (isset($post_meta[$meta_key][0])) {
+                $meta_name = $meta_key;
+                if (substr($meta_name, 0, 1) === '_') {
+                    $meta_name = substr($meta_name, 1);
+                }
+                $concatenatedDocuments .= $meta_name . ': ' . $post_meta[$meta_key][0] . "\n";
+            }
+        }
+    }
+    $concatenatedDocuments .= "\n\n";
   }
 
   // Generate the conversation history buffer
@@ -196,9 +214,15 @@ function aichwp_chat_handler() {
   if (isset($history)) {
       $reversedHistory = array_reverse($history);
 
+      error_log(print_r($reversedHistory, true));
+
       foreach ($reversedHistory as $item) {
           if (isset($item['role']) && isset($item['content'])) {
-              $message = $item['role'] . ': ' . $item['content'] . "\n";
+              if($item['role'] == "AI") {
+                  $message = 'You: ' . strip_tags(preg_replace('/<[^>]*>.*?<\/[^>]*>/', '', $item['content'])) . "\n";
+              } else {
+                  $message = 'User: ' . strip_tags(preg_replace('/<[^>]*>.*?<\/[^>]*>/', '', $item['content'])) . "\n";
+              }
               $messageLength = strlen($message);
 
               if ($characterCount + $messageLength <= $maxCharacters) {
@@ -211,11 +235,11 @@ function aichwp_chat_handler() {
       }
   }
 
-  $conversationHistoryBuffer = strip_tags($conversationHistoryBuffer);
+  //$conversationHistoryBuffer = strip_tags($conversationHistoryBuffer);
 
   // Generate the prompt
   $prompt = <<<EOD
-You are a helpful chat assistant running on a wordpress website tasked with answering user queries about the content pages on the site, which will be provided to you in <context> tags. Try and avoid answering questions un-related to the content on the site. If you are unable to find a good answer, say you don't know.
+You are a helpful chat assistant running on a wordpress website tasked with answering user questions (in <question> tags) about the content pages on the site, which will be provided to you in <context> tags. Try and avoid answering questions un-related to the content on the site. If you are unable to find a good answer, say you don't know.
 
 Use the following pieces of context to give a helpful answer to the question following:
 <context>
@@ -237,6 +261,7 @@ EOD;
   // Query the index and generate the response
   try {
       $response = $openAi->generateResultString([$prompt]);
+      $response = str_replace('You: ', '', str_replace('AI: ', '', $response));
   } catch (Exception $e) {
       $response_data = [
         'query' => $query,
