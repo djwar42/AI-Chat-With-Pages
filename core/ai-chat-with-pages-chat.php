@@ -156,7 +156,7 @@ function aichwp_chat_handler() {
         $documentPassage = preg_replace("/^PostTitle: .+\n/", "", $documentPassage);
 
         // Apply the same transformations to the post content
-        $transformedPostContent = trim(preg_replace("/\n\s*\n/", "\n", strip_tags($postContent)));
+        $transformedPostContent = aichwp_transform_post_content($postContent);
 
         // Find the position of the document passage within the transformed post content
         $position = strpos($transformedPostContent, $documentPassage);

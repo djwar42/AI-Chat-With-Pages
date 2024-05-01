@@ -4,9 +4,8 @@ require_once AICHWP_PLUGIN_DIR .'/vendor/autoload.php';
 
 use Kambo\Langchain\LLMs\OpenAIChat;
 
-/**
- * Register settings page
-*/
+
+// Register settings page
 add_action('admin_menu', 'aichwp_register_settings_page');
 
 function aichwp_register_settings_page() {
@@ -21,9 +20,7 @@ function aichwp_register_settings_page() {
   );
 }
 
-/**
- * Render settings page
-*/
+// Render settings page
 function aichwp_render_settings_page() {
   if (!current_user_can('manage_options')) {
     return;
@@ -95,9 +92,7 @@ function aichwp_render_settings_page() {
   <?php
 }
 
-/**
- * Register settings
-*/
+// Register settings
 add_action('admin_init', 'aichwp_register_settings');
 
 function aichwp_register_settings() {
@@ -232,23 +227,17 @@ function aichwp_register_settings() {
   }
 }
 
-/**
- * Section text
-*/
+// Section text
 function aichwp_section_text() {
   echo 'Configure the main AI Chat With Pages settings below:';
 }
 
-/**
- * Indexing progress section text
-*/
+// Indexing progress section text
 function aichwp_indexing_progress_section_text() {
   echo 'Site content indexing:';
 }
 
-/**
-* Output indexing progress indicator field
-*/
+// Output indexing progress indicator field
 function aichwp_indexing_progress_indicator_field() {
   $options = get_option('aichwp_settings', array());
 
@@ -259,9 +248,7 @@ function aichwp_indexing_progress_indicator_field() {
   }
 }
 
-/**
- * Get the total number of indexed documents
- */
+// Get the total number of indexed documents
 function aichwp_get_total_indexed_documents() {
   global $wpdb;
   $table_name = $wpdb->prefix . 'aichat_post_embeddings';
@@ -269,9 +256,7 @@ function aichwp_get_total_indexed_documents() {
   return intval($total_indexed);
 }
 
-/**
- * Output messages per hour limit field
-*/
+// Output messages per hour limit field
 function aichwp_messages_per_hour_limit_field() {
   $options = get_option('aichwp_settings', array());
   $messages_per_hour_limit = isset($options['messages_per_hour_limit']) ? intval($options['messages_per_hour_limit']) : 50;
@@ -279,9 +264,7 @@ function aichwp_messages_per_hour_limit_field() {
   echo '<input type="number" name="aichwp_settings[messages_per_hour_limit]" value="' . esc_attr($messages_per_hour_limit) . '" min="0" />';
 }
 
-/**
- * Output OpenAI chat model field
-*/
+// Output OpenAI chat model field
 function aichwp_openai_chat_model_field() {
   $options = get_option('aichwp_settings', array());
   $openai_chat_model = isset($options['openai_chat_model']) ? esc_attr($options['openai_chat_model']) : 'gpt-3.5-turbo';
@@ -292,16 +275,12 @@ function aichwp_openai_chat_model_field() {
   echo '</select>';
 }
 
-/**
- * Colors section text
-*/
+// Colors section text
 function aichwp_colors_section_text() {
   echo 'Set the colors for the chat interface:';
 }
 
-/**
-* Output color picker field
-*/
+// Output color picker field
 function aichwp_color_field($args) {
   $options = get_option('aichwp_settings', array());
   $color = $args['color'];
@@ -311,9 +290,7 @@ function aichwp_color_field($args) {
   echo '<a href="#" class="aichwp-reset-color" data-color="' . $color . '">Reset to default</a>';
 }
 
-/**
- * Output API key field
-*/
+// Output API key field
 function aichwp_openai_key_field() {
   $options = get_option('aichwp_settings', array());
   
@@ -324,16 +301,12 @@ function aichwp_openai_key_field() {
   echo '<input type="text" name="aichwp_settings[openai_api_key]" value="' . esc_attr($options['openai_api_key']) . '" />';
 }
 
-/**
- * Post types section text
-*/
+// Post types section text
 function aichwp_post_types_section_text() {
   echo 'Select the post types to include in the search:';
 }
 
-/**
- * Get all post types
- */
+// Get all post types
 function aichwp_get_post_types() {
   $post_types = get_post_types(['public' => true], 'names');
   $post_types[] = 'wp_template';
@@ -341,9 +314,7 @@ function aichwp_get_post_types() {
   return $post_types;
 }
 
-/**
- * Output post type checkbox field
- */
+// Output post type checkbox field
 function aichwp_post_type_field($args) {
   $options = get_option('aichwp_settings', array());
   $post_type = $args['post_type'];
@@ -352,16 +323,12 @@ function aichwp_post_type_field($args) {
   echo '<input type="checkbox" name="aichwp_settings[post_types][' . esc_attr($post_type) . ']" value="1" ' . $checked . ' />';
 }
 
-/**
- * Chat options section text
-*/
+// Chat options section text
 function aichwp_chat_options_section_text() {
   echo 'Configure the chat options below:';
 }
 
-/**
- * Output chat welcome message field
-*/
+// Output chat welcome message field
 function aichwp_chat_welcome_message_field() {
   $options = get_option('aichwp_settings', array());
   $chat_welcome_message = isset($options['chat_welcome_message']) ? esc_textarea($options['chat_welcome_message']) : '';
@@ -369,9 +336,7 @@ function aichwp_chat_welcome_message_field() {
   echo '<textarea name="aichwp_settings[chat_welcome_message]" rows="4" cols="50">' . $chat_welcome_message . '</textarea>';
 }
 
-/**
- * Output initial suggested question field
-*/
+// Output initial suggested question field
 function aichwp_initial_suggested_question_field($args) {
   $options = get_option('aichwp_settings', array());
   $question_number = $args['question_number'];
@@ -380,9 +345,7 @@ function aichwp_initial_suggested_question_field($args) {
   echo '<textarea name="aichwp_settings[initial_suggested_question_' . $question_number . ']" rows="2" cols="50">' . $initial_suggested_question . '</textarea>';
 }
 
-/**
-* Output post meta fields checkbox field
-**/
+// Output post meta fields checkbox field
 function aichwp_post_meta_fields_field($args) {
     $options = get_option('aichwp_settings', array());
     $post_type = $args['post_type'];
@@ -394,10 +357,11 @@ function aichwp_post_meta_fields_field($args) {
 
     if (!empty($sample_post)) {
         $meta_fields = get_post_custom($sample_post[0]->ID);
+        $post_type_object = get_post_type_object($post_type);
 
-        echo '<div class="aichwp-post-meta-fields-container">';
-        echo '<a href="#" class="aichwp-toggle-meta-fields" data-post-type="' . esc_attr($post_type) . '">Select meta fields</a>';
-        echo '<div class="aichwp-post-meta-fields-list" data-post-type="' . esc_attr($post_type) . '" style="display: none;">';
+        echo '<div class="aichwp-post-meta-fields-container" style="margin-top: -20px;">';
+        echo '<a href="#" class="aichwp-toggle-meta-fields" data-post-type="' . esc_attr($post_type) . '">Select ' .esc_attr($post_type_object->label). ' meta fields +</a>';
+        echo '<div class="aichwp-post-meta-fields-list" data-post-type="' . esc_attr($post_type) . '" style="display: none; margin-top: 10px;">';
 
         if (!empty($meta_fields)) {
             foreach ($meta_fields as $meta_key => $meta_value) {
@@ -416,9 +380,7 @@ function aichwp_post_meta_fields_field($args) {
     }
 }
 
-/**
- * Validate input
- */
+// Validate input
 function aichwp_validate_settings($input) {
   $output = array();
 
@@ -490,9 +452,7 @@ function aichwp_validate_settings($input) {
   return $output;
 }
 
-/**
- * Enqueue scripts and styles for the plugin's admin page
-*/
+// Enqueue scripts and styles for the plugin's admin page
 add_action('admin_enqueue_scripts', 'aichwp_admin_enqueue_scripts');
 
 function aichwp_admin_enqueue_scripts($hook) {

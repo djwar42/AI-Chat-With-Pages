@@ -38,7 +38,7 @@ function aichwp_create_initial_embeddings() {
       $post_metadata = get_post_meta($post->ID);
 
       // Filter post content
-      $post_content = preg_replace("/\n\s*\n/", "\n", strip_tags($post->post_content));
+      $post_content = aichwp_transform_post_content($post->post_content);
 
       // Split the combined content into chunks
       $content_chunks = aichwp_split_content($post_content, 7000);
@@ -83,7 +83,7 @@ function awchwp_get_posts() {
     $posts = array_merge($posts, $wp_template_posts);
 
     $posts = array_filter($posts, function ($post) {
-        return !empty(trim(preg_replace("/\n\s*\n/", "\n", strip_tags($post->post_content))));
+        return !empty(trim(aichwp_transform_post_content($post->post_content)));
     });
 
     return $posts;
@@ -228,6 +228,7 @@ function aichwp_release_semaphore_lock() {
   update_option('aichwp_embeddings_progress_semaphore', false);
 }
 
+// Unschedule the initial embeddings creation
 function aichwp_unschedule_initial_embeddings() {
   // Clear any existing scheduled actions
   as_unschedule_all_actions('aichwp_create_post_embeddings');
@@ -235,6 +236,7 @@ function aichwp_unschedule_initial_embeddings() {
   update_option('aichwp_create_initial_embeddings_running', 0);
 }
 
+// AJAX endpoint to get the indexing progress
 function aichwp_get_indexing_progress() {
   $progress = get_option('aichwp_embeddings_progress');
 
@@ -247,9 +249,7 @@ function aichwp_get_indexing_progress() {
 add_action('wp_ajax_aichwp_get_indexing_progress', 'aichwp_get_indexing_progress');
 
 
-/**
- * Create tables
-*/
+//  Create the initial tables
 function aichwp_create_initial_tables()
 {
     global $wpdb;
@@ -310,7 +310,7 @@ function aichwp_save_post($post_id, $post, $update) {
   if ($post->post_status === 'publish') {
       
       // Filter post content
-      $post_content = preg_replace("/\n\s*\n/", "\n", strip_tags($post->post_content));
+      $post_content = aichwp_transform_post_content($post->post_content);
       
       // Split the combined content into chunks
       $content_chunks = aichwp_split_content($post_content, 7000);
@@ -382,9 +382,12 @@ function aichwp_plugin_activation() {
     }
 }
 
-/**
- * Plugin deactivation hook
- */
+// Transform post content
+function aichwp_transform_post_content($postContent) {
+  return preg_replace("/\n\s*\n/", "\n", strip_tags($postContent));
+}
+
+// Plugin deactivation hook
 function aichwp_plugin_deactivation() {
     aichwp_unschedule_initial_embeddings();
 }
