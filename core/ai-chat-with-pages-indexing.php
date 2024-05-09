@@ -239,6 +239,11 @@ function aichwp_unschedule_initial_embeddings() {
 function aichwp_get_indexing_progress() {
   $progress = get_option('aichwp_embeddings_progress');
 
+  if (!is_array($progress)) {
+    wp_send_json_success(null);
+    return;
+  }
+
   if ($progress['processed'] + $progress['failed'] >= $progress['total']) {
       wp_send_json_success(null);
   } else {
