@@ -11,9 +11,10 @@ Tested up to: 6.5.2
 Requires PHP: 5.6
 Stable tag: 1.0.0
 
+An AI chatbot that allows users to chat with your site content.
+
 == Description ==
 An AI chatbot that can index your sites pages, posts and other custom post types and allow the user to chat with it.
-
 
 == Installation ==
 This section describes how to install the plugin and get it working.

@@ -1,3 +1,4 @@
+// App.js
 import React, { useState, useEffect, useRef } from 'react'
 import { sendMessage } from './chatApi'
 import { AvatarImage, AvatarFallback, Avatar } from '@radix-ui/react-avatar'

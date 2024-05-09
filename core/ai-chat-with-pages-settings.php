@@ -251,8 +251,7 @@ function aichwp_indexing_progress_indicator_field() {
 // Get the total number of indexed documents
 function aichwp_get_total_indexed_documents() {
   global $wpdb;
-  $table_name = $wpdb->prefix . 'aichat_post_embeddings';
-  $total_indexed = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM $table_name WHERE is_active = 1");
+  $total_indexed = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM {$wpdb->prefix}aichat_post_embeddings WHERE is_active = 1");
   return intval($total_indexed);
 }
 
@@ -492,6 +491,9 @@ function aichwp_admin_enqueue_scripts($hook) {
       'initial_suggested_question_3' => $options['initial_suggested_question_3'] ?? '',
   ];
   wp_localize_script('aichwp-chat-script', 'aichwp_chat_vars', $chat_options);
+
+  $aichwp_chat_nonce = wp_create_nonce('aichwp_chat_nonce');
+  wp_localize_script('aichwp-chat-script', 'aichwp_chat_nonce', $aichwp_chat_nonce);
 
   wp_localize_script('aichwp-admin-script', 'aichwp_ajax', [
     'ajax_url' => admin_url('admin-ajax.php'),

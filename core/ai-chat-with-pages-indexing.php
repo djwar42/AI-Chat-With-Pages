@@ -6,9 +6,8 @@ require_once AICHWP_PLUGIN_DIR .'/vendor/autoload.php';
 use Kambo\Langchain\Indexes\VectorstoreIndexCreator;
 use Kambo\Langchain\LLMs\OpenAIChat;
 
-/**
- * Go through all posts and create embeddings
-*/
+
+// Go through all posts and create embeddings
 function aichwp_create_initial_embeddings() {
   global $wpdb;
 
@@ -249,51 +248,42 @@ function aichwp_get_indexing_progress() {
 add_action('wp_ajax_aichwp_get_indexing_progress', 'aichwp_get_indexing_progress');
 
 
-//  Create the initial tables
-function aichwp_create_initial_tables()
-{
-    global $wpdb;
+// Create the initial tables
+function aichwp_create_initial_tables() {
+  global $wpdb;
 
-    $tables = [
-        'aichat_post_collection' => [
-            'id' => 'bigint(20) UNSIGNED AUTO_INCREMENT PRIMARY KEY',
-            'name' => 'varchar(255) NOT NULL',
-        ],
-        'aichat_post_embeddings' => [
-            'id' => 'bigint(20) UNSIGNED AUTO_INCREMENT PRIMARY KEY',
-            'uuid' => 'varchar(255)',
-            'collection_id' => 'bigint(20) UNSIGNED',
-            'post_id' => 'bigint(20) UNSIGNED',
-            'post_type' => 'varchar(255)',
-            'document' => 'text NOT NULL',
-            'metadata' => 'text NOT NULL',
-            'vector' => 'text NOT NULL',
-            'is_active' => 'tinyint(1) DEFAULT 1'
-        ],
-        'aichat_user_messages' => [
-            'id' => 'bigint(20) UNSIGNED AUTO_INCREMENT PRIMARY KEY',
-            'user_hash' => 'varchar(255) NOT NULL',
-            'messages' => 'int(11) NOT NULL DEFAULT 0',
-            'latest_hour' => 'int(11) NOT NULL'
-        ]
-    ];
+  $wpdb->query("
+      CREATE TABLE IF NOT EXISTS {$wpdb->prefix}aichat_post_collection (
+          `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+          `name` varchar(255) NOT NULL
+      )
+  ");
 
-    foreach ($tables as $tableName => $columns) {
-        $columnDefinitions = [];
-        foreach ($columns as $columnName => $columnType) {
-            $columnDefinitions[] = "{$columnName} {$columnType}";
-        }
+  $wpdb->query("
+      CREATE TABLE IF NOT EXISTS {$wpdb->prefix}aichat_post_embeddings (
+          `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+          `uuid` varchar(255),
+          `collection_id` bigint(20) UNSIGNED,
+          `post_id` bigint(20) UNSIGNED,
+          `post_type` varchar(255),
+          `document` text NOT NULL,
+          `metadata` text NOT NULL,
+          `vector` text NOT NULL,
+          `is_active` tinyint(1) DEFAULT 1
+      )
+  ");
 
-        $columnDefinitionsSql = implode(', ', $columnDefinitions);
-        $tableName = $wpdb->prefix . $tableName;
-        $sql = "CREATE TABLE IF NOT EXISTS `{$tableName}` ({$columnDefinitionsSql})";
-        $wpdb->query($sql);
-    }
+  $wpdb->query("
+      CREATE TABLE IF NOT EXISTS {$wpdb->prefix}aichat_user_messages (
+          `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+          `user_hash` varchar(255) NOT NULL,
+          `messages` int(11) NOT NULL DEFAULT 0,
+          `latest_hour` int(11) NOT NULL
+      )
+  ");
 }
 
-/**
- * On post save, unpublish, or delete, schedule an action to update the embeddings
-*/
+// On post save, unpublish, or delete, schedule an action to update the embeddings
 function aichwp_save_post($post_id, $post, $update) {
   global $wpdb;
   
@@ -353,9 +343,8 @@ function aichwp_delete_post_embeddings($post_id) {
 }
 add_action('delete_post', 'aichwp_delete_post_embeddings');
 
-/**
- * Plugin activation hook
- */
+
+// Plugin activation hook
 function aichwp_plugin_activation() {
     aichwp_create_initial_tables();
 
@@ -384,7 +373,7 @@ function aichwp_plugin_activation() {
 
 // Transform post content
 function aichwp_transform_post_content($postContent) {
-  return preg_replace("/\n\s*\n/", "\n", strip_tags($postContent));
+  return preg_replace("/\n\s*\n/", "\n", wp_strip_all_tags($postContent));
 }
 
 // Plugin deactivation hook

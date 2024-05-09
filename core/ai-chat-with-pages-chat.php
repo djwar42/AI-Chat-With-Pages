@@ -15,7 +15,13 @@ use Kambo\Langchain\LLMs\LLMResult;
 add_action('wp_ajax_aichwp_chat', 'aichwp_chat_handler');
 add_action('wp_ajax_nopriv_aichwp_chat', 'aichwp_chat_handler');
 
+// Handle the chat request
 function aichwp_chat_handler() {
+  if (!isset($_POST['aichwp_chat_nonce']) || !wp_verify_nonce($_POST['aichwp_chat_nonce'], 'aichwp_chat_nonce')) {
+    wp_send_json_error('Invalid nonce');
+    wp_die();
+  }
+
   // Retrieve the query and history from the AJAX request
   $query = isset($_POST['query']) ? $_POST['query'] : '';
   $history = isset($_POST['history']) ? json_decode(stripslashes($_POST['history']), true) : [];
@@ -31,7 +37,7 @@ function aichwp_chat_handler() {
         'query' => $query,
         'response' => 'The ai chat with pages plugin requires an API key to be set up.',
         'references' => [],
-        'history' => json_encode(['history' => []]),
+        'history' => wp_json_encode(['history' => []]),
         'chat_in_progress' => false,
       ];
       wp_send_json_success($response_data);
@@ -47,17 +53,17 @@ function aichwp_chat_handler() {
   $user_hash = md5($user_ip . $user_agent);
 
   // Get the current hour
-  $current_hour = date('YmdH');
+  $current_hour = gmdate('YmdH');
 
   global $wpdb;
   $user_messages_table = $wpdb->prefix . 'aichat_user_messages';
 
   // Remove entries older than 48 hours
-  $forty_eight_hours_ago = date('YmdH', strtotime('-48 hours'));
-  $wpdb->query($wpdb->prepare("DELETE FROM $user_messages_table WHERE latest_hour < %d", $forty_eight_hours_ago));
+  $forty_eight_hours_ago = gmdate('YmdH', strtotime('-48 hours'));
+  $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}aichat_user_messages WHERE latest_hour < %d", $forty_eight_hours_ago));
 
   // Check if the user hash exists in the table
-  $user_messages = $wpdb->get_row($wpdb->prepare("SELECT * FROM $user_messages_table WHERE user_hash = %s", $user_hash));
+  $user_messages = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}aichat_user_messages WHERE user_hash = %s", $user_hash));
 
   if ($user_messages) {
       // User hash exists, update the message count and latest hour
@@ -95,7 +101,7 @@ function aichwp_chat_handler() {
       $response_data = [
           'query' => $query,
           'response' => 'You have exceeded your messages for this hour, please wait some time and try again.',
-          'history' => json_encode(['history' => $history]),
+          'history' => wp_json_encode(['history' => $history]),
           'chat_in_progress' => false,
       ];
       wp_send_json_success($response_data);
@@ -120,7 +126,7 @@ function aichwp_chat_handler() {
         'query' => $query,
         'response' => 'An error occurred while generating the response, check the OpenAI API Key.',
         'references' => [],
-        'history' => json_encode(['history' => []]),
+        'history' => wp_json_encode(['history' => []]),
         'chat_in_progress' => false,
       ];
       wp_send_json_success($response_data);
@@ -214,14 +220,14 @@ function aichwp_chat_handler() {
   if (isset($history)) {
       $reversedHistory = array_reverse($history);
 
-      error_log(print_r($reversedHistory, true));
+      //error_log(print_r($reversedHistory, true));
 
       foreach ($reversedHistory as $item) {
           if (isset($item['role']) && isset($item['content'])) {
               if($item['role'] == "AI") {
-                  $message = 'You: ' . strip_tags(preg_replace('/<[^>]*>.*?<\/[^>]*>/', '', $item['content'])) . "\n";
+                  $message = 'You: ' . wp_strip_all_tags(preg_replace('/<[^>]*>.*?<\/[^>]*>/', '', $item['content'])) . "\n";
               } else {
-                  $message = 'User: ' . strip_tags(preg_replace('/<[^>]*>.*?<\/[^>]*>/', '', $item['content'])) . "\n";
+                  $message = 'User: ' . wp_strip_all_tags(preg_replace('/<[^>]*>.*?<\/[^>]*>/', '', $item['content'])) . "\n";
               }
               $messageLength = strlen($message);
 
@@ -234,8 +240,6 @@ function aichwp_chat_handler() {
           }
       }
   }
-
-  //$conversationHistoryBuffer = strip_tags($conversationHistoryBuffer);
 
   // Generate the prompt
   $prompt = <<<EOD
@@ -253,8 +257,6 @@ $query
 <conversationhistory>
 $conversationHistoryBuffer
 </conversationhistory>
-
-
 EOD;
   //error_log("--- PROMPT ---\n" . $prompt);
 
@@ -267,7 +269,7 @@ EOD;
         'query' => $query,
         'response' => 'An error occurred while generating the response, check the OpenAI API Key.',
         'references' => [],
-        'history' => json_encode(['history' => []]),
+        'history' => wp_json_encode(['history' => []]),
         'chat_in_progress' => false,
       ];
       wp_send_json_success($response_data);
@@ -297,7 +299,7 @@ EOD;
   $response_data = [
       'query' => $query,
       'response' => $response,
-      'history' => json_encode([
+      'history' => wp_json_encode([
           'history' => $history
       ]),
       'chat_in_progress' => true,
@@ -307,9 +309,8 @@ EOD;
   wp_send_json_success($response_data);
 }
 
-/**
- * Register chat widget
-*/
+
+// Register chat widget
 add_action('wp_enqueue_scripts', 'aichwp_enqueue_scripts');
 function aichwp_enqueue_scripts() {
   $options = get_option('aichwp_settings', array());
@@ -342,15 +343,18 @@ function aichwp_enqueue_scripts() {
 
     wp_localize_script('aichwp-chat-script', 'aichwp_color_vars', $color_vars);
     wp_localize_script('aichwp-chat-script', 'aichwp_chat_vars', $chat_vars);
+    
+    $aichwp_chat_nonce = wp_create_nonce('aichwp_chat_nonce');
+    wp_localize_script('aichwp-chat-script', 'aichwp_chat_nonce', $aichwp_chat_nonce);
+    
     wp_localize_script('aichwp-chat-script', 'aichwp_ajax', [
       'ajax_url' => admin_url('admin-ajax.php')
     ]);
   }
 }
 
-/**
- * Append the chat widget div to the HTML
- */
+
+// Append the chat widget div to the HTML
 add_action('wp_body_open', 'aichwp_append_chat_app_div');
 function aichwp_append_chat_app_div() {
     $options = get_option('aichwp_settings', array());
