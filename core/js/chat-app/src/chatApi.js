@@ -2,6 +2,9 @@
 export const sendMessage = async (query, history) => {
   try {
     // eslint-disable-next-line no-undef
+    console.log(aichwp_chat_nonce)
+
+    // eslint-disable-next-line no-undef
     const response = await fetch(aichwp_ajax.ajax_url, {
       method: 'POST',
       headers: {
