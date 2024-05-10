@@ -2,9 +2,6 @@
 export const sendMessage = async (query, history) => {
   try {
     // eslint-disable-next-line no-undef
-    console.log(aichwp_chat_nonce)
-
-    // eslint-disable-next-line no-undef
     const response = await fetch(aichwp_ajax.ajax_url, {
       method: 'POST',
       headers: {
@@ -18,14 +15,18 @@ export const sendMessage = async (query, history) => {
         aichwp_chat_nonce: aichwp_chat_nonce
       })
     })
+
     const data = await response.json()
+
     if (data.success) {
       return data.data
     } else {
-      throw new Error('Chat request failed')
+      throw new Error(data.data || 'Chat request failed')
     }
   } catch (error) {
     console.error('Error:', error)
-    throw error
+    return {
+      response: `An error occurred: ${error.message}`
+    }
   }
 }

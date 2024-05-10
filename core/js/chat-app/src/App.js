@@ -94,14 +94,19 @@ export default function App() {
         const finalHistory = [...updatedHistory, assistantMessage]
         setChatHistory(finalHistory)
         scrollToBottom(true)
+
         localStorage.setItem(
           'aichwp_chat_history',
           JSON.stringify(finalHistory)
         )
-        localStorage.setItem('aichwp_chat_in_progress', 'true')
+
         setIsLoading(false)
       } catch (error) {
         console.error('Error:', error)
+        const errorMessage = { role: 'AI', content: error.message }
+        const finalHistory = [...updatedHistory, errorMessage]
+        setChatHistory(finalHistory)
+        scrollToBottom(true)
         setIsLoading(false)
       }
 

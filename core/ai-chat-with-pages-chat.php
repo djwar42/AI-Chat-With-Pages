@@ -18,7 +18,7 @@ add_action('wp_ajax_nopriv_aichwp_chat', 'aichwp_chat_handler');
 // Handle the chat request
 function aichwp_chat_handler() {
   if (!isset($_POST['aichwp_chat_nonce']) || !wp_verify_nonce($_POST['aichwp_chat_nonce'], 'aichwp_chat_nonce')) {
-    wp_send_json_error('Invalid nonce');
+    wp_send_json_error('Invalid nonce, please refresh the page');
     wp_die();
   }
 
