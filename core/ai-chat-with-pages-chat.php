@@ -353,6 +353,14 @@ function aichwp_enqueue_scripts() {
   }
 }
 
+add_action('wp_ajax_aichwp_refresh_nonce', 'aichwp_refresh_nonce');
+add_action('wp_ajax_nopriv_aichwp_refresh_nonce', 'aichwp_refresh_nonce');
+
+function aichwp_refresh_nonce() {
+    $new_nonce = wp_create_nonce('aichwp_chat_nonce');
+    wp_send_json_success($new_nonce);
+}
+
 
 // Append the chat widget div to the HTML
 add_action('wp_body_open', 'aichwp_append_chat_app_div');
