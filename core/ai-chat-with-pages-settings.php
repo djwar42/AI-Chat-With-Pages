@@ -271,7 +271,7 @@ function aichwp_openai_chat_model_field() {
   echo '<select name="aichwp_settings[openai_chat_model]">';
   echo '<option value="gpt-3.5-turbo"' . selected($openai_chat_model, 'gpt-3.5-turbo', false) . '>gpt-3.5-turbo</option>';
   echo '<option value="gpt-4-turbo"' . selected($openai_chat_model, 'gpt-4-turbo', false) . '>gpt-4-turbo</option>';
-  echo '</select>';
+  echo '<option value="gpt-4o"' . selected($openai_chat_model, 'gpt-4o', false) . '>gpt-4o</option>';
 }
 
 // Colors section text
@@ -396,7 +396,7 @@ function aichwp_validate_settings($input) {
   $output['messages_per_hour_limit'] = sanitize_text_field($input['messages_per_hour_limit']);
 
   // Validate OpenAI chat model
-  $valid_models = array('gpt-3.5-turbo', 'gpt-4-turbo');
+  $valid_models = array('gpt-3.5-turbo', 'gpt-4-turbo', 'gpt-4o');
   if (!in_array($input['openai_chat_model'], $valid_models)) {
     $input['openai_chat_model'] = 'gpt-3.5-turbo';
   }
