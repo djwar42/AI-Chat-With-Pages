@@ -66,7 +66,7 @@ function aichwp_render_settings_page() {
 
       foreach ((array) $wp_settings_sections['aichwp'] as $section) {
         if ($section['title']) {
-          echo "<h2 style='font-size: 22px; margin-top: 30px;'>{$section['title']}</h2>\n";
+          echo "<h2 style='font-size: 22px; margin-top: 30px;'>" . esc_html($section['title']) . "</h2>\n";
         }
 
         if ($section['callback']) {
@@ -244,7 +244,7 @@ function aichwp_indexing_progress_indicator_field() {
   if (!isset($options['openai_api_key']) || empty($options['openai_api_key'])) {
     echo '<span id="aichwp_indexing_status">&nbsp;Please set your OpenAI API Key above.</span>';
   } else {
-    echo '<span id="aichwp_indexing_status">'. aichwp_get_total_indexed_documents() .' documents indexed.</span>';
+    echo '<span id="aichwp_indexing_status">'. esc_html(aichwp_get_total_indexed_documents()) .' documents indexed.</span>';
   }
 }
 
@@ -285,8 +285,8 @@ function aichwp_color_field($args) {
   $color = $args['color'];
   $value = isset($options[$color]) ? esc_attr($options[$color]) : '';
 
-  echo '<input type="text" name="aichwp_settings[' . $color . ']" value="' . $value . '" class="aichwp-color-picker" />';
-  echo '<a href="#" class="aichwp-reset-color" data-color="' . $color . '">Reset to default</a>';
+  echo '<input type="text" name="aichwp_settings[' . esc_attr($color) . ']" value="' . esc_attr($value) . '" class="aichwp-color-picker" />';
+  echo '<a href="#" class="aichwp-reset-color" data-color="' . esc_attr($color) . '">Reset to default</a>';
 }
 
 // Output API key field
@@ -319,7 +319,7 @@ function aichwp_post_type_field($args) {
   $post_type = $args['post_type'];
   $checked = isset($options['post_types'][$post_type]) ? checked($options['post_types'][$post_type], 1, false) : 'checked';
 
-  echo '<input type="checkbox" name="aichwp_settings[post_types][' . esc_attr($post_type) . ']" value="1" ' . $checked . ' />';
+  echo '<input type="checkbox" name="aichwp_settings[post_types][' . esc_attr($post_type) . ']" value="1" ' . esc_attr($checked) . ' />';
 }
 
 // Chat options section text
@@ -332,7 +332,7 @@ function aichwp_chat_welcome_message_field() {
   $options = get_option('aichwp_settings', array());
   $chat_welcome_message = isset($options['chat_welcome_message']) ? esc_textarea($options['chat_welcome_message']) : '';
 
-  echo '<textarea name="aichwp_settings[chat_welcome_message]" rows="4" cols="50">' . $chat_welcome_message . '</textarea>';
+  echo '<textarea name="aichwp_settings[chat_welcome_message]" rows="4" cols="50">' . esc_textarea($chat_welcome_message) . '</textarea>';
 }
 
 // Output initial suggested question field
@@ -341,7 +341,7 @@ function aichwp_initial_suggested_question_field($args) {
   $question_number = $args['question_number'];
   $initial_suggested_question = isset($options['initial_suggested_question_' . $question_number]) ? esc_textarea($options['initial_suggested_question_' . $question_number]) : '';
 
-  echo '<textarea name="aichwp_settings[initial_suggested_question_' . $question_number . ']" rows="2" cols="50">' . $initial_suggested_question . '</textarea>';
+  echo '<textarea name="aichwp_settings[initial_suggested_question_' . esc_attr($question_number) . ']" rows="2" cols="50">' . esc_textarea($initial_suggested_question) . '</textarea>';
 }
 
 // Output post meta fields checkbox field
@@ -366,7 +366,7 @@ function aichwp_post_meta_fields_field($args) {
             foreach ($meta_fields as $meta_key => $meta_value) {
                 $checked = isset($options['post_meta_fields'][$post_type][$meta_key]) ? 'checked' : '';
                 echo '<label>';
-                echo '<input type="checkbox" name="aichwp_settings[post_meta_fields][' . esc_attr($post_type) . '][' . esc_attr($meta_key) . ']" value="1" ' . $checked . ' />';
+                echo '<input type="checkbox" name="aichwp_settings[post_meta_fields][' . esc_attr($post_type) . '][' . esc_attr($meta_key) . ']" value="1" ' . esc_attr($checked) . ' />';
                 echo esc_html($meta_key);
                 echo '</label><br>';
             }
