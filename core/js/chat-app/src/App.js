@@ -97,7 +97,12 @@ export default function App() {
 
         localStorage.setItem(
           'aichwp_chat_history',
-          JSON.stringify(finalHistory)
+          JSON.stringify(
+            finalHistory.map((message) => ({
+              ...message,
+              content: message.content.replace(/<br>/g, '\n')
+            }))
+          )
         )
 
         setIsLoading(false)
@@ -135,10 +140,15 @@ export default function App() {
       role === 'AI'
         ? aichwpAIChatMessageTextColor
         : aichwpUserChatMessageTextColor
-    const formattedContent = sanitizedContent.replace(
-      /<a(.*?)>(.*?)<\/a>/g,
-      `<a$1 class="font-bold hover:underline block mt-2" style="color: ${color}">$2</a>`
-    )
+
+    // Convert newlines to <br> tags and format links
+    const formattedContent = sanitizedContent
+      .replace(/\n/g, '<br>')
+      .replace(
+        /<a(.*?)>(.*?)<\/a>/g,
+        `<a$1 class="font-bold hover:underline block mt-2" style="color: ${color}">$2</a>`
+      )
+
     return formattedContent
   }
 
