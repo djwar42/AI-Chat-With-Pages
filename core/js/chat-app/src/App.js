@@ -79,7 +79,8 @@ export default function App() {
 
   const handleSendMessage = async () => {
     if (chatInput.trim() !== '' && !isSending) {
-      const userMessage = { role: 'Human', content: chatInput }
+      const strippedInput = chatInput.replace(/<[^>]*>/g, '')
+      const userMessage = { role: 'Human', content: strippedInput }
       const updatedHistory = [...chatHistory, userMessage]
       setChatHistory(updatedHistory)
       scrollToBottom(true)

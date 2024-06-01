@@ -1,6 +1,6 @@
 <?php
 // ai-chat-with-pages-indexing.php
-require_once AICHWP_PLUGIN_DIR . '/vendor/action-scheduler/action-scheduler.php';
+require_once AICHWP_PLUGIN_DIR . '/plugins/action-scheduler/action-scheduler.php';
 require_once AICHWP_PLUGIN_DIR .'/vendor/autoload.php';
 
 use Kambo\Langchain\Indexes\VectorstoreIndexCreator;
