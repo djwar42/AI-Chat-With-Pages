@@ -17,14 +17,14 @@ add_action('wp_ajax_nopriv_aichwp_chat', 'aichwp_chat_handler');
 
 // Handle the chat request
 function aichwp_chat_handler() {
-  if (!isset($_POST['aichwp_chat_nonce']) || !wp_verify_nonce($_POST['aichwp_chat_nonce'], 'aichwp_chat_nonce')) {
+  if (!isset($_POST['aichwp_chat_nonce']) || !wp_verify_nonce(sanitize_text_field( wp_unslash ( $_POST['aichwp_chat_nonce'] ) ) , 'aichwp_chat_nonce')) {
     wp_send_json_error('Invalid nonce, please refresh the page');
     wp_die();
   }
 
   // Retrieve the query and history from the AJAX request
-  $query = isset($_POST['query']) ? $_POST['query'] : '';
-  $history = isset($_POST['history']) ? json_decode(stripslashes($_POST['history']), true) : [];
+  $query = isset($_POST['query']) ? sanitize_text_field( wp_unslash ( $_POST['query'] ) ) : '';
+  $history = isset($_POST['history']) ? json_decode(sanitize_text_field( wp_unslash ($_POST['history'] ) ), true) : [];
 
   // Limit the query to 5000 characters
   $query = substr($query, 0, 5000);
@@ -48,8 +48,8 @@ function aichwp_chat_handler() {
   $messages_per_hour_limit = isset($options['messages_per_hour_limit']) ? intval($options['messages_per_hour_limit']) : 30;
 
   // Create the user hash based on IP and browser client
-  $user_ip = $_SERVER['REMOTE_ADDR'];
-  $user_agent = $_SERVER['HTTP_USER_AGENT'];
+  $user_ip = sanitize_text_field( wp_unslash ( $_SERVER['REMOTE_ADDR'] ) );
+  $user_agent = sanitize_text_field( wp_unslash ( $_SERVER['HTTP_USER_AGENT'] ) );
   $user_hash = md5($user_ip . $user_agent);
 
   // Get the current hour
