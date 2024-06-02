@@ -1,5 +1,7 @@
 <?php
 // ai-chat-with-pages-indexing.php
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 require_once AICHWP_PLUGIN_DIR . '/plugins/action-scheduler/action-scheduler.php';
 require_once AICHWP_PLUGIN_DIR .'/vendor/autoload.php';
 
@@ -15,7 +17,7 @@ function aichwp_create_initial_embeddings() {
 
   update_option('aichwp_create_initial_embeddings_running', 1);
 
-  $posts = awchwp_get_posts();
+  $posts = aichwp_get_posts();
 
   // Get the total number of posts
   $total_posts = count($posts);
@@ -60,7 +62,7 @@ function aichwp_create_initial_embeddings() {
 
 add_action('aichwp_create_post_embeddings', 'aichwp_create_post_embeddings_callback', 10, 4);
 
-function awchwp_get_posts() {
+function aichwp_get_posts() {
     // Get all published posts
     $post_types = get_post_types(['public' => true], 'names');
     unset($post_types['attachment']);

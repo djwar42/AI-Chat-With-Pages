@@ -1,5 +1,7 @@
 <?php
 // ai-chat-with-pages-settings.php
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 require_once AICHWP_PLUGIN_DIR .'/vendor/autoload.php';
 
 use Kambo\Langchain\LLMs\OpenAIChat;
