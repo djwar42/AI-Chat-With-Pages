@@ -231,7 +231,7 @@ class CronExpression
     public function isDue($currentTime = 'now')
     {
         if ('now' === $currentTime) {
-            $currentDate = date('Y-m-d H:i');
+            $currentDate = gmdate('Y-m-d H:i');
             $currentTime = strtotime($currentDate);
         } elseif ($currentTime instanceof DateTime) {
             $currentDate = $currentTime->format('Y-m-d H:i');
